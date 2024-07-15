@@ -37,7 +37,7 @@ function LiveCatModel({ isOpen, onRequestClose, onLiveCategoryAdded }) {
 
             <div className='h-9 w-9 absolute z-50 top-0 right-0 rounded-xl bg-white flex justify-center items-center '>
 
-                <div onClick={onRequestClose} className="flex justify-center items-center close-button">X</div>
+                <div onClick={onRequestClose} className="flex justify-center items-center close-button">&times;</div>
             </div>
 
 

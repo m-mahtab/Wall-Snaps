@@ -64,15 +64,16 @@ function AddCategory({ onCategoryAdded, onRequestClose }) {
                     </div>
                     <div>
                         <label className="block text-gray-700">Image</label>
-                        <div className="mt-1 p-2 bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-44">
+                        <div className="mt-1  bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-44">
                             {selectedImage ? (
-                                <img src={selectedImage} alt="Selected" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+                                <img src={selectedImage} alt="Selected" className='w-full h-full rounded-3xl' />
                             ) : (
                                 <BiImages className='opacity-40 text-5xl' />
                             )}
                         </div>
                         <input
                             type="file"
+                            accept='image'
                             onChange={handleImageChange}
                             className="hidden"
                             id="fileInput"

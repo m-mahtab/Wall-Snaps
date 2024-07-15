@@ -56,9 +56,12 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
 
     return (
         <>
-            <div className="wallpaper bg-white  ">
-                <div className='relative h-10  w-full border-b-2 border-b-[#f2f2f2]'>
-                    <h2 className="font-bold text-xl py-6  cat-bar-add mb-4 px-4">Add Wallpaper</h2>
+            <div className="wallpaper bg-white add-wall ">
+                <div className='  w-full border-b-2 border-b-[#f2f2f2]'>
+                    <div className='relative '>
+
+                    <h2 className="font-bold text-xl cat-bar-add my-5 px-4">Add Wallpaper</h2>
+                    </div>
                 </div>
                 <div className=' p-5'>
 
@@ -75,13 +78,13 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
                         </div>
 
 
-                        <div className="mb-4 flex space-x-3">
-                            <div className="">
+                        <div className="mb-4 flex justify-between space-x-3">
+                            <div className="w-1/2">
                                 <label className="block text-gray-700">Select Category </label>
                                 <select
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
-                                    className="mt-1 py-3 px-9 border rounded-full w-full text-[#bfbdbd] "
+                                    className="mt-1 py-3 px-9 border rounded-full w-full text-[#787878] "
                                     required
                                 >
                                     <option value="">Select</option>
@@ -91,13 +94,13 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
                                     <option value="Abstract">Abstract</option>
                                 </select>
                             </div>
-                            <div className=''>
+                            <div className='w-1/2'>
 
                                 <label className="block text-gray-700">Select Type</label>
                                 <select
                                     value={type}
                                     onChange={(e) => setType(e.target.value)}
-                                    className="mt-1 py-3 px-9 border rounded-full w-full text-[#bfbdbd]"
+                                    className="mt-1 py-3 px-9 border rounded-full w-full text-[#787878]"
                                     required
                                 >
                                     <option value="">Select</option>
@@ -115,15 +118,16 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
 
                         <div className="mb-4">
                             <label className="block text-gray-700">Image</label>
-                            <div className="mt-1 p-2 bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-32">
+                            <div className="mt-1  bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-32">
                                 {selectedImage ? (
-                                    <img src={selectedImage} alt="Selected" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+                                    <img src={selectedImage} alt="Selected" className='w-full h-full rounded-3xl p-0'/>
                                 ) : (
                                     <BiImages className='opacity-40 text-5xl' />
                                 )}
                             </div>
                             <input
                                 type="file"
+                                accept='image'
                                 onChange={handleImageChange}
                                 className="hidden"
                                 id="fileInput"

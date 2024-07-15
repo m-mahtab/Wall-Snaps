@@ -1,103 +1,212 @@
-import React, { useState, useEffect } from 'react';
-import Modal from 'react-modal';
+import React, { useState, useEffect } from "react";
+import Modal from "react-modal";
 
-function EditWal({ editItem, onWallpaperEdit, setEditItem }) {
-  const [formData, setFormData] = useState({ id : '', src: '', category: '', type: '', tags: '', featured: ''  });
+function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
+  const customStyles = {
+    content: {
+      height: "auto",
+      width: "500px",
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      transform: "translate(-50%, -50%)",
+      padding: "",
+      borderRadius: "1.5rem",
+      overflowY: "auto",
+      overflowX: "hidden",
+    },
+    overlay: {
+      backgroundColor: "rgba(0, 0, 0, 0.75)",
+    },
+  };
+
+  const [id, setId] = useState("");
+  const [image, setImage] = useState(null);
+  const [category, setCategory] = useState("");
+  const [type, setType] = useState("");
+  const [tags, setTags] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (editItem) {
-      setFormData({ id: editItem.id, src: editItem.src, category: editItem.category, type: editItem.type, tags: editItem.tags, featured: editItem.featured });
+      setId(editItem.id);
+      setCategory(editItem.category);
+      setType(editItem.type);
+      setTags(editItem.tags);
+      setSelectedImage(currentImage);
       setIsModalOpen(true);
     }
-  }, [editItem]);
+  }, [editItem, currentImage]);
 
-  const handleFormChange = (e) => {
-    console.log(formData)
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleFormSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    fetch(`http://localhost:5000/wallpaper_gallery/${editItem.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
+    const formData = new FormData();
+    formData.append("category", category);
+    formData.append("type", type);
+    formData.append("tags", tags);
+
+    if (image) {
+      formData.append("image", image);
+    }
+
+    fetch(`http://localhost:5000/wallpaper_gallery/${id}`, {
+      method: "PUT",
+      body: formData,
     })
-      .then(response => response.json())
-      .then(updatedItem => {
-      
-        onWallpaperEdit(prevData => prevData.map(item => item.id === updatedItem.id ? updatedItem : item));
+      .then((response) => response.json())
+      .then((updatedItem) => {
+        onWallpaperEdit((prevData) =>
+          prevData.map((item) =>
+            item.id === updatedItem.id ? updatedItem : item
+          )
+        );
         setEditItem(null);
         setIsModalOpen(false);
+        window.location.reload();
       })
-      .catch(error => console.log(error));
+      .catch((error) => console.log(error));
   };
 
   const closeModal = () => {
     setEditItem(null);
     setIsModalOpen(false);
+    
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
     <Modal
       isOpen={isModalOpen}
       onRequestClose={closeModal}
-      className="overlay-edit modal flex items-center justify-center py-10"
+      style={customStyles}
+      className="modal flex items-center justify-center p-0"
+      overlayClassName="overlay"
     >
-      <div className='h-auto w-full bg-white rounded-3xl '>
-        <div>
+      <div className="wallpaper bg-white add-wall">
+        <div className=" w-full border-b-2 border-b-[#f2f2f2]">
+          <div className="relative">
+          <h2 className="font-bold text-xl  cat-bar-add my-5 px-4">
+            Edit Wallpaper
+          </h2>
 
-          <h2 className="font-bold text-xl p-5 mb-4">Edit Wallpaper</h2>
-          <form onSubmit={handleFormSubmit} className="p-4  rounded-lg mb-4">
-            
-            <input
-              type="text"
-              name="src"
-              value={formData.src}
-              onChange={handleFormChange}
-              placeholder="Image URL"
-              className="p-2 m-2 border rounded"
-            />
-            <input
-              type="text"
-              name="title"
-              value={formData.category}
-              onChange={handleFormChange}
-              placeholder="Title"
-              className="p-2 m-2 border rounded"
-            />
-            <input
-              type="text"
-              name="count"
-              value={formData.type}
-              onChange={handleFormChange}
-              placeholder="Count"
-              className="p-2 m-2 border rounded"
-            />
-            <input
-              type="text"
-              name="count"
-              value={formData.tags}
-              onChange={handleFormChange}
-              placeholder="Count"
-              className="p-2 m-2 border rounded"
-            />
-            <input
-              type="text"
-              name="count"
-              value={formData.featured}
-              onChange={handleFormChange}
-              placeholder="Count"
-              className="p-2 m-2 border rounded"
-            />
-            <button type="submit"   onWallpaperEdit={onWallpaperEdit} className="bg-green-500 text-white p-2 rounded">Save</button>
-            <button type="button" onClick={closeModal} className="bg-red-500 text-white p-2 rounded ml-2">Cancel</button>
+          </div>
+        </div>
+        <div className="p-5">
+          <form onSubmit={handleSubmit} className="">
+            <div className="mb-4">
+              <label className="block text-gray-700">Tags</label>
+              <input
+                type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                className="mt-1 p-3 border rounded-full w-full"
+                required
+              />
+            </div>
+
+            <div className="mb-4 flex space-x-3">
+              <div className="w-1/2">
+                <label className="block text-gray-700">Select Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="mt-1 py-3 px-9 border rounded-full w-full text-[#bfbdbd]"
+                  required
+                >
+                  <option value="">Select</option>
+                  <option value="Nature">Nature</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Animals">Animals</option>
+                  <option value="Abstract">Abstract</option>
+                </select>
+              </div>
+              <div className="w-1/2">
+                <label className="block text-gray-700">Select Type</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="mt-1 py-3 px-9 border rounded-full w-full text-[#bfbdbd]"
+                  required
+                >
+                  <option value="">Select</option>
+                  <option value="Premium">Premium</option>
+                  <option value="Locked">Locked</option>
+                  <option value="None">None</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700">Image</label>
+              <div className="mt-1 bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-32">
+                {selectedImage ? (
+                  <img
+                    src={selectedImage}
+                    alt="Selected"
+                    className="rounded-3xl p-0 w-full h-full"
+                    
+                  />
+                ) : (
+                  <img
+                    src={currentImage}
+                    alt="Current"
+                    className="rounded-3xl p-0 w-full h-full"
+                    
+                  />
+                )}
+              </div>
+              <input
+                type="file"
+                onChange={handleImageChange}
+                className="hidden"
+                id="fileInput"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById("fileInput").click()}
+                className="my-3 p-3 font-semibold bg-cus-black w-2/5 rounded-full text-white shadow-[#766f85e6] shadow-lg"
+              >
+                Upload Image
+              </button>
+            </div>
+
+            <div className="flex justify-end items-center space-x-3 border-t-2 border-t-[#f2f2f2]">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="text-black px-9 py-3 rounded-full font-semibold shadow-2xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-cus-black text-white px-9 py-3 rounded-full font-semibold shadow-[#766f85e6] shadow-lg"
+              >
+                Save
+              </button>
+            </div>
           </form>
         </div>
       </div>
+      <div
+          onClick={closeModal}
+          className="text-2xl absolute z-50 top-2 right-2 shadow-xl shadow-slate-200 rounded-xl h-9 w-9 bg-white flex justify-center items-center close-button"
+        >
+          &times;
+        </div>
     </Modal>
   );
 }

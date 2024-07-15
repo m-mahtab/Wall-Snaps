@@ -45,4 +45,4 @@ function CategoryModal({ isOpen, onRequestClose, onCategoryAdded }) {
     );
 }
 
-export default CategoryModal;
+export default  CategoryModal;

@@ -40,24 +40,29 @@ const PrivacyPolicy = () => {
        
     };
     const handlePreview = () => {
-        navigate('/index/preview');
-    };
+        const previewWindow = window.open('http://localhost:5000/public/policy_preview.html', '_blank');
+        previewWindow.onload = function() {
+          previewWindow.postMessage(content, 'http://localhost:5173');  
+        };
+      };
+    
+    
 
    
     return (
         <div className='border border-slate-200 h-auto'>
             <div className='m-8 h-auto bg-white rounded-2xl shadow-xl'>
-                <div className='h-auto border-b-2 border-slate-100 px-6 py-3'>
-                    <div className='h-auto flex items-center justify-start'>
-                        <p className='font-bold'>Privacy Policy</p>
-                        <button onClick={handlePreview} className='mx-5 bg-cus-black text-white px-6 py-1 rounded-full font-semibold'>Preview</button>
+                <div className='h-auto border-b-2 border-slate-100 relative px-6 py-3'>
+                    <div className='h-auto py-3 flex items-center  justify-start'>
+                        <p className='font-bold text-lg cat-bar'>Privacy Policy</p>
+                        <button onClick={handlePreview} className='btn-shadow mx-5 bg-cus-black text-white px-6 py-1 rounded-full font-semibold'>Preview</button>
                     </div>
-                </div>
+                </div>  
                 <div className='px-6 h-auto'>
-                    <div className='py-2 px-4 my-5 rounded-xl border border-slate-200'>
+                    <div className='py-2 px-4 my-5 '>
                         <ReactQuill 
                             value={content} onChange={setContent}
-                            className='border-none'
+                            className='custom-quil' 
                             />
                     </div>
                     <button onClick={handleSaveChanges} className="my-5 bg-cus-black text-white px-9 py-3 rounded-full font-semibold shadow-2xl">

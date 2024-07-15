@@ -1,9 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import Modal from 'react-modal';
+import React, { useState, useEffect } from "react";
+import Modal from "react-modal";
 
-
-function EditCat({ editItem, onCategoryEdit, setEditItem , currentImage}) {
-  const [formData, setFormData] = useState({ id: '', title: ''});
+function EditCat({ editItem, onCategoryEdit, setEditItem, currentImage }) {
+  const customStyles = {
+    content: {
+      height: "510px", // Customize height
+      width: "500px", // Customize width
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      transform: "translate(-50%, -50%)",
+      borderRadius: "0.5rem", // Rounded corners
+      overflowY: "auto",
+      overflowX: "hidden",
+    },
+    overlay: {
+      backgroundColor: "rgba(0, 0, 0, 0.75)", // Overlay background color
+    },
+  };
+  const [formData, setFormData] = useState({ id: "", title: "" });
   const [image, setImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,25 +39,28 @@ function EditCat({ editItem, onCategoryEdit, setEditItem , currentImage}) {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     const updatedFormData = new FormData();
-    updatedFormData.append('id', formData.id);
-    updatedFormData.append('title', formData.title);
-    
+    updatedFormData.append("title", formData.title);
+
     if (image) {
-      updatedFormData.append('image', image);
+      updatedFormData.append("image", image);
     }
 
-    fetch(`http://localhost:5000/new_cat/:id`, {
-      method: 'PUT',
+    fetch(`http://localhost:5000/new_cat/${formData.id}`, {
+      method: "PUT",
       body: updatedFormData,
     })
-      .then(response => response.json())
-      .then(updatedItem => {
-        onCategoryEdit(prevData => prevData.map(item => item.id === updatedItem.id ? updatedItem : item));
+      .then((response) => response.json())
+      .then((updatedItem) => {
+        onCategoryEdit((prevData) =>
+          prevData.map((item) =>
+            item.id === updatedItem.id ? updatedItem : item
+          )
+        );
         setEditItem(null);
         setIsModalOpen(false);
-        // window.location.reload();
+        window.location.reload();
       })
-      .catch(error => console.log(error));
+      .catch((error) => console.log(error));
   };
 
   const closeModal = () => {
@@ -67,12 +86,15 @@ function EditCat({ editItem, onCategoryEdit, setEditItem , currentImage}) {
       onRequestClose={closeModal}
       className="modal flex items-center justify-center p-0"
       overlayClassName="overlay shadow-xl"
+      style={customStyles}
     >
-      <div className='h-auto w-full bg-white rounded-3xl'>
-        <div className='relative h-10 w-full border-b-2 border-b-[#f2f2f2]'>
-          <h2 className="font-bold text-xl cat-bar-add mb-4 px-4">Edit Category</h2>
+      <div className="h-auto w-full bg-white rounded-3xl">
+        <div className="relative h-10 w-full border-b-2 border-b-[#f2f2f2]">
+          <h2 className="font-bold text-xl cat-bar-add mb-4 px-4">
+            Edit Category
+          </h2>
         </div>
-        <div className='p-5'>
+        <div className="p-5 h-full">
           <form onSubmit={handleFormSubmit} className="">
             <div className="mb-4">
               <label className="block text-gray-700">Title</label>
@@ -87,12 +109,19 @@ function EditCat({ editItem, onCategoryEdit, setEditItem , currentImage}) {
             </div>
 
             <div>
-             
-              <div className="mt-1 p-2 bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-44">
+              <div className="mt-1 bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-44">
                 {selectedImage ? (
-                  <img src={selectedImage} alt="Selected" className='w-full h-full rounded-3xl p-0' />
+                  <img
+                    src={selectedImage}
+                    alt="Selected"
+                    className="w-full h-full rounded-3xl p-0"
+                  />
                 ) : (
-                  <img src={currentImage} alt='Current' className='w-full h-full rounded-3xl p-0'/>
+                  <img
+                    src={currentImage}
+                    alt="Current"
+                    className="w-full h-full rounded-3xl p-0"
+                  />
                 )}
               </div>
               <input
@@ -103,16 +132,29 @@ function EditCat({ editItem, onCategoryEdit, setEditItem , currentImage}) {
               />
               <button
                 type="button"
-                onClick={() => document.getElementById('fileInput').click()}
+                onClick={() => document.getElementById("fileInput").click()}
                 className="my-3 p-2 font-semibold bg-cus-black w-3/5 rounded-full text-white"
               >
                 Add Image
               </button>
             </div>
 
-            <div className='flex justify-end items-center space-x-3 border-t-2 border-t-[#f2f2f2]'>
-              <button type="button" onClick={closeModal} className="text-black px-9 py-3 rounded-full font-semibold shadow-2xl">Cancel</button>
-              <button type="submit" className="bg-cus-black text-white px-9 py-3 rounded-full font-semibold shadow-2xl">Save</button>
+            <div className="border-t-2 border-t-[#f2f2f2]">
+              <div className="flex justify-end items-center space-x-3 pt-5">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="text-black px-9 py-3 rounded-full font-semibold shadow-2xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-cus-black text-white px-9 py-3 rounded-full font-semibold shadow-2xl"
+                >
+                  Save
+                </button>
+              </div>
             </div>
           </form>
         </div>

@@ -15,10 +15,10 @@ function Sidebar({ openSidebarToggle }) {
     <div>
 
 
-      <aside className={`h-full  sidebar border-r-[#f2f2f2] border-r-2 ${openSidebarToggle ? '' : 'hidden'}`}>
+      <aside className={`h-full lg:block sidebar border-r-[#f2f2f2] border-r-2 ${openSidebarToggle ? '' : 'hidden'}`}>
         <Link to='/index'>
-          <div className='h-[70px]  bg-wallsnaps border-b-[#f2f2f2] border-b-2'>
-            <div className='flex items-center justify-center font-semibold text-2xl'>
+          <div className='h-[70px] flex items-center justify-center bg-wallsnaps border-b-[#f2f2f2] border-b-2'>
+            <div className='font-semibold text-2xl flex items-center justify-center '>
               WallSnaps.
             </div>
           </div>
@@ -29,7 +29,7 @@ function Sidebar({ openSidebarToggle }) {
               <li className={`icons my-4 ${activeLink === 'dashboard' ? 'bg-cus-black text-white rounded-full w-full h-full ' : ''}`}>
                 <div className={``}>
 
-                  <Link to='/index' className='flex items-center justify-center  ' onClick={() => handleColorChange('dashboard')}>
+                  <Link to='/' className='flex items-center justify-center  ' onClick={() => handleColorChange('dashboard')}>
                     <BiHomeAlt className='icon-set' />
                     <span>Dashboard</span>
                   </Link>

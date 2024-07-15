@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body class="preview">
+    
+      <div class="policy-class" id="policy-content"></div>
+    
+    <script>
+      fetch("http://localhost:5000/privacy_policies")
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("policy-content").innerHTML = data.content;
+        })
+        .catch((error) => console.error("Error:", error));
+    </script>
+  </body>
+</html>

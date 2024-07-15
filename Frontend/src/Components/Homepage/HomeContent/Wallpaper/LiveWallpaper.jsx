@@ -3,29 +3,43 @@ import ReactPaginate from "react-paginate";
 import { LuPlayCircle } from "react-icons/lu";
 import LiveWallModel from "./LiveWallModel";
 import EditLiveWall from "./EditLiveWall";
+import VideoModal from "./VideoModal";
 
 function LiveWallpaper() {
   const [currentPage, setCurrentPage] = useState(0);
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [editItem, setEditItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
   const itemsPerPage = 4;
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:5000/livewallpapers")
       .then((response) => response.json())
-      .then((data) => setData(data))
+      .then((data) => {
+        setData(data);
+        setFilteredData(data); // Initialize filteredData with all data
+      })
       .catch((error) => console.log(error));
   }, []);
 
   const offset = currentPage * itemsPerPage;
-  const currentPageData = data.slice(offset, offset + itemsPerPage);
+  const currentPageData = filteredData.slice(offset, offset + itemsPerPage);
 
   const handlePageClick = ({ selected }) => {
     setCurrentPage(selected);
   };
+
   const handleEditClick = (item) => {
     setEditItem(item);
+  };
+
+  const handlePreviewClick = (videoUrl) => {
+    setCurrentVideoUrl(`http://localhost:5000/${videoUrl}`);
+    setIsVideoModalOpen(true);
   };
 
   const handleDeleteClick = (id) => {
@@ -35,18 +49,23 @@ function LiveWallpaper() {
       .then((response) => response.json())
       .then(() => {
         setData(data.filter((item) => item.id !== id));
+        setFilteredData(filteredData.filter((item) => item.id !== id));
       })
       .catch((error) => console.log(error));
   };
 
   const handleWallpaperAdded = (newWallpaper) => {
     setData([...data, newWallpaper]);
+    setFilteredData([...filteredData, newWallpaper]);
     setIsModalOpen(false);
   };
 
   const handleWallpaperEdit = (updatedData) => {
-    console.log(updatedData);
-    setData([...data, updatedData]);
+    const updatedList = data.map((item) =>
+      item.id === updatedData.id ? updatedData : item
+    );
+    setData(updatedList);
+    setFilteredData(updatedList);
     setIsModalOpen(false);
   };
 
@@ -58,7 +77,48 @@ function LiveWallpaper() {
     setIsModalOpen(false);
   };
 
-  const totalcount = data.length;
+  const handleSearch = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    setSearchTerm(searchTerm);
+
+    const filteredItems = data.filter(
+      (item) =>
+        item.category.toLowerCase().includes(searchTerm) ||
+        item.tags.toLowerCase().includes(searchTerm)
+    );
+
+    setFilteredData(filteredItems);
+    setCurrentPage(0); // Reset to first page when searching
+  };
+
+  const toggleFeatured = (id, currentFeatured) => {
+    const newFeatured = !currentFeatured;
+
+    fetch(`http://localhost:5000/livewallpapers/${id}/featured`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ featured: newFeatured }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+
+      .then(() => {
+        const updatedItems = data.map((item) =>
+          item.id === id ? { ...item, featured: newFeatured } : item
+        );
+        setData(updatedItems);
+        setFilteredData(updatedItems); // Update filteredData after toggle
+      })
+      .catch((error) => console.log(error));
+  };
+
+  const totalcount = filteredData.length;
 
   return (
     <div className="h-auto py-8">
@@ -82,11 +142,12 @@ function LiveWallpaper() {
             </span>
             <p className="text-lg">entries </p>
           </div>
-          <div className="flex items-center justify-between px-3 w-1/3">
+          <div className="flex items-center justify-between px-3 w-fit">
             <p>Search:</p>
             <input
               type="text"
-              // onChange={(e) => setTitle(e.target.value)}
+              value={searchTerm}
+              onChange={handleSearch}
               className="mt-1 p-3 border border-slate-200 rounded-full"
               required
             />
@@ -95,8 +156,10 @@ function LiveWallpaper() {
         {editItem && (
           <EditLiveWall
             editItem={editItem}
-            onWallpaperEdit={handleWallpaperEdit}
+            onLiveWallpaperEdit={handleWallpaperEdit}
             setEditItem={setEditItem}
+            currentImage={`http://localhost:5000/${editItem.thumbnail}`}
+            currentVideo={`http://localhost:5000/${editItem.video}`}
           />
         )}
 
@@ -113,45 +176,64 @@ function LiveWallpaper() {
             </tr>
           </thead>
           <tbody>
-            {currentPageData.map((item) => (
+            {currentPageData.map((item, index) => (
               <tr
-                key={item.id}
-                className="text-center border-b-2  border-gray-300 py-10"
+                key={index}
+                className="text-center border-b-2  border-gray-300 py-5"
               >
-                <td className=" pl-8 py-2">
-                  <img
-                    src={`http://localhost:5000/${item.thumbnail}`}
-                    alt={item.title}
-                    className="h-40 w-24 mx-auto rounded-lg"
-                  />
+                <td className=" px-7 flex items-center justify-center py-5">
+                  <div className=" h-36 flex items-center justify-center">
+                    <img
+                      src={`http://localhost:5000/${item.thumbnail}`}
+                      alt={item.title}
+                      className="h-full rounded-lg w-max"
+                    />
+                  </div>
                 </td>
-                <td className="preview preview-info py-16">
-                  <button className="ml-4 font-bold px-4  text-white text-lg flex items-center justify-center bg-cus-black rounded-full">
-                    <LuPlayCircle className="text-xl mr-2"/>
-                    Preview
-                  </button>
+                <td className="preview preview-info ">
+                  <div className=" flex items-center justify-center">
+                    <button
+                      onClick={() => handlePreviewClick(item.video)}
+                      className=" font-bold px-4 h-9  text-white text-md flex items-center justify-center bg-cus-black rounded-full"
+                    >
+                      <LuPlayCircle className="text-xl mr-2" />
+                      Preview
+                    </button>
+                  </div>
                 </td>
                 <td className="px-4 py-2">{item.category}</td>
                 <td className="px-4 py-2">{item.tags}</td>
                 <td className="type">
-                  <span class="badge badge-info border-radius-5">
+                  <span className="badge badge-info border-radius-5">
                     {item.type}{" "}
                   </span>
                 </td>
-                <td className="px-4 py-2">{item.featured}</td>
-                <td className="flex space-x-3 pr-8 items-center justify-center text-white">
-                  <button
-                    onClick={() => handleEditClick(item)}
-                    className="h-8 w-16 bg-green-500 font-semibold shadow-xl rounded-md"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(item.id)}
-                    className="h-8 w-16 bg-red-500 font-semibold shadow-xl rounded-md"
-                  >
-                    Delete
-                  </button>
+                <td className="px-4 py-2">
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={item.featured}
+                      onChange={() => toggleFeatured(item.id, item.featured)}
+                      className="sr-only peer"
+                    />
+                    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-200 dark:peer-focus:ring-slate-600 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-slate-900"></div>
+                  </label>
+                </td>
+                <td className=" pr-8 text-white">
+                  <div className="flex items-center justify-center space-x-3">
+                    <button
+                      onClick={() => handleEditClick(item)}
+                      className="h-8 w-16 bg-[#54ca68] font-semibold shadow-xl rounded-md"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(item.id)}
+                      className="h-8 w-16 bg-[#fc544b] font-semibold shadow-xl rounded-md"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -163,7 +245,7 @@ function LiveWallpaper() {
           nextLabel={"Next"}
           breakLabel={"..."}
           breakClassName={"break-me"}
-          pageCount={Math.ceil(data.length / itemsPerPage)}
+          pageCount={Math.ceil(filteredData.length / itemsPerPage)}
           marginPagesDisplayed={2}
           pageRangeDisplayed={5}
           onPageChange={handlePageClick}
@@ -182,6 +264,11 @@ function LiveWallpaper() {
           isOpen={isModalOpen}
           onRequestClose={closeModal}
           onWallpaperAdded={handleWallpaperAdded}
+        />
+        <VideoModal
+          isOpen={isVideoModalOpen}
+          onRequestClose={() => setIsVideoModalOpen(false)}
+          videoUrl={currentVideoUrl}
         />
       </div>
     </div>
