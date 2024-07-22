@@ -4,7 +4,7 @@ import AddLiveCat from './AddLiveCat';
 
 Modal.setAppElement('#root');
 
-function LiveCatModel({ isOpen, onRequestClose, onLiveCategoryAdded }) {
+function LiveCatModel({ isOpen, onRequestClose, onLiveAdded }) {
     const customStyles = {
         content: {
             height: 'auto', // Customize height
@@ -32,7 +32,7 @@ function LiveCatModel({ isOpen, onRequestClose, onLiveCategoryAdded }) {
             className="modal flex items-center justify-center p-0"
             overlayClassName="overlay shadow-xl"
         >
-            <AddLiveCat onLiveCategoryAdded={onLiveCategoryAdded} isOpen={isOpen}
+            <AddLiveCat onLiveAdded={onLiveAdded} isOpen={isOpen}
                 onRequestClose={onRequestClose} />
 
             <div className='h-9 w-9 absolute z-50 top-0 right-0 rounded-xl bg-white flex justify-center items-center '>

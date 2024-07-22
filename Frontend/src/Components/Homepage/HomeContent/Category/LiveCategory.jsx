@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import LiveCatModel from "./LiveCatModel";
 import EditLiveCat from "./EditLiveCat";
+import axios from "axios";
 
 function LiveCategory() {
   const [currentPage, setCurrentPage] = useState(0);
@@ -10,6 +11,7 @@ function LiveCategory() {
   const [editItem, setEditItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [imagesCount, setImagesCount] = useState([]);
   const itemsPerPage = 4;
 
   useEffect(() => {
@@ -80,7 +82,24 @@ function LiveCategory() {
   const closeModal = () => {
     setIsModalOpen(false);
   };
+  useEffect(() => {
+    const fetchImagesCount = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/image-count-livecat');
+        setImagesCount(response.data);
+      } catch (error) {
+        console.error('Error fetching images count', error);
+      }
+    };
 
+    fetchImagesCount();
+  }, []);
+
+    // Helper function to get count for a specific title
+    const getCountForTitle = (title) => {
+      const countItem = imagesCount.find(item => item.title === title);
+      return countItem ? countItem.count : 0;
+    };
   return (
     <div className="h-auto py-8">
       <div className="h-auto bg-white rounded-2xl shadow-xl">
@@ -151,7 +170,7 @@ function LiveCategory() {
                 <td className="text-white">
                   <div className="flex items-center justify-center">
                     <div className="bg-cus-black rounded-full w-20 h-12 flex justify-center items-center">
-                      {item.wallpapercount}
+                    {getCountForTitle(item.title)}
                     </div>
                   </div>
                 </td>

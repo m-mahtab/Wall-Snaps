@@ -11,6 +11,7 @@ function Category() {
   const [editItem, setEditItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [imagesCount, setImagesCount] = useState([]);
   const [images, setImages] = useState([])
   const itemsPerPage = 4;
 
@@ -89,6 +90,25 @@ function Category() {
     setIsModalOpen(false);
   };
 
+  useEffect(() => {
+    const fetchImagesCount = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/image-count');
+        setImagesCount(response.data);
+      } catch (error) {
+        console.error('Error fetching images count', error);
+      }
+    };
+
+    fetchImagesCount();
+  }, []);
+
+    // Helper function to get count for a specific title
+    const getCountForTitle = (title) => {
+      const countItem = imagesCount.find(item => item.title === title);
+      return countItem ? countItem.count : 0;
+    };
+
   return (
     <div className="h-auto py-8">
       <div className="h-auto bg-white rounded-2xl shadow-xl">
@@ -159,7 +179,7 @@ function Category() {
                 <td className="text-white">
                   <div className="flex items-center justify-center">
                     <div className="bg-cus-black rounded-full w-20 h-12 flex justify-center items-center">
-                      {item.count}
+                    {getCountForTitle(item.title)}
                     </div>
                   </div>
                 </td>

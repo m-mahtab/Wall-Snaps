@@ -6,7 +6,6 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
     const [id, setId] = useState('');
     const [image, setImage] = useState(null);
     const [category, setCategory] = useState('');
-    const [type, setType] = useState('');
     const [tags, setTags] = useState('');
     const [featured, setFeatured] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
@@ -18,7 +17,6 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
         formData.append('id', id);
         formData.append('image', image);
         formData.append('category', category);
-        formData.append('type', type);
         formData.append('tags', tags);
         formData.append('featured', featured);
 
@@ -32,7 +30,6 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
                 setId('');
                 setImage(null);
                 setCategory('');
-                setType('');
                 setTags('');
                 setFeatured('');
                 window.location.reload();
@@ -94,24 +91,7 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
                                     <option value="Abstract">Abstract</option>
                                 </select>
                             </div>
-                            <div className='w-1/2'>
-
-                                <label className="block text-gray-700">Select Type</label>
-                                <select
-                                    value={type}
-                                    onChange={(e) => setType(e.target.value)}
-                                    className="mt-1 py-3 px-9 border rounded-full w-full text-[#787878]"
-                                    required
-                                >
-                                    <option value="">Select</option>
-                                    <option value="Premium">Premium</option>
-                                    <option value="Locked">Locked</option>
-                                    <option value="None">None</option>
-                                    
-
-                                </select>
-                               
-                            </div>
+                    
                         </div>
 
 
@@ -132,7 +112,7 @@ function AddWallpaper({ onWallpaperAdded, onRequestClose }) {
                                 className="hidden"
                                 id="fileInput"
                                 placeholder='Upload Image'
-                                required
+                               
                             />
                             <button
                                 type="button"

@@ -24,7 +24,6 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
   const [id, setId] = useState("");
   const [image, setImage] = useState(null);
   const [category, setCategory] = useState("");
-  const [type, setType] = useState("");
   const [tags, setTags] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +32,6 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
     if (editItem) {
       setId(editItem.id);
       setCategory(editItem.category);
-      setType(editItem.type);
       setTags(editItem.tags);
       setSelectedImage(currentImage);
       setIsModalOpen(true);
@@ -44,7 +42,6 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
     e.preventDefault();
     const formData = new FormData();
     formData.append("category", category);
-    formData.append("type", type);
     formData.append("tags", tags);
 
     if (image) {
@@ -131,20 +128,6 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
                   <option value="Technology">Technology</option>
                   <option value="Animals">Animals</option>
                   <option value="Abstract">Abstract</option>
-                </select>
-              </div>
-              <div className="w-1/2">
-                <label className="block text-gray-700">Select Type</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="mt-1 py-3 px-9 border rounded-full w-full text-[#bfbdbd]"
-                  required
-                >
-                  <option value="">Select</option>
-                  <option value="Premium">Premium</option>
-                  <option value="Locked">Locked</option>
-                  <option value="None">None</option>
                 </select>
               </div>
             </div>

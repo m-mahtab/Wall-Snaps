@@ -160,7 +160,6 @@ function WallPaper() {
               <th className="w-1/6 py-2">Image</th>
               <th className="w-1/6 py-2">Category</th>
               <th className="w-1/6 py-2">Tags</th>
-              <th className="w-1/6 py-2">Type</th>
               <th className="w-1/6 py-2">Featured</th>
               <th className="w-1/6 py-2">Actions</th>
             </tr>
@@ -174,7 +173,7 @@ function WallPaper() {
                 <td className=" py-5 px-10 flex items-center justify-center">
                   <div className=" h-36 flex items-center justify-center">
                     <img
-                      src={`http://localhost:5000/${item.image}`}
+                      src={`http://localhost:5000/${item.thumbnail}`}
                       alt={item.title}
                       className="h-full rounded-lg w-max"
                     />
@@ -182,11 +181,7 @@ function WallPaper() {
                 </td>
                 <td className="px-4 py-2">{item.category}</td>
                 <td className="px-4 py-2">{item.tags}</td>
-                <td className="type">
-                  <span className="badge badge-info border-radius-5">
-                    {item.type}
-                  </span>
-                </td>
+               
                 <td className="px-4 py-2">
                   <label className="inline-flex items-center cursor-pointer">
                     <input

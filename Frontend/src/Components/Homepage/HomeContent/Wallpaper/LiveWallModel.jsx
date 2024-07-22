@@ -12,7 +12,7 @@ const customStyles = {
     bottom: "auto",
     transform: "translate(-50%, -50%)",
     padding: "0",
-    borderRadius: "0.5rem", // Rounded corners
+    borderRadius: "1.5rem", // Rounded corners
     overflowY: "auto",
     overflowX: "hidden",
   },

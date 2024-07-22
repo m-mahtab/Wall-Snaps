@@ -32,7 +32,6 @@ function EditLiveWall({
   const [thumbnail, setThumbnail] = useState(null);
   const [video, setVideo] = useState(null);
   const [category, setCategory] = useState("");
-  const [type, setType] = useState("");
   const [tags, setTags] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -42,7 +41,6 @@ function EditLiveWall({
     if (editItem) {
       setId(editItem.id);
       setCategory(editItem.category);
-      setType(editItem.type);
       setTags(editItem.tags);
       setThumbnail(null); // Reset thumbnail state for new selection
       setVideo(null); // Reset video state for new selection
@@ -59,7 +57,6 @@ function EditLiveWall({
     formData.append("thumbnail", thumbnail); // Append new thumbnail file if changed
     formData.append("video", video); // Append new video file if changed
     formData.append("category", category);
-    formData.append("type", type);
     formData.append("tags", tags);
 
     try {
@@ -157,20 +154,6 @@ function EditLiveWall({
                   <option value="Abstract">Abstract</option>
                 </select>
               </div>
-              <div className="w-1/2">
-                <label className="block text-gray-700">Select Type</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="mt-1 py-3 border rounded-full w-full text-[#787878]"
-                  required
-                >
-                  <option value="">Select Type</option>
-                  <option value="Premium">Premium</option>
-                  <option value="Locked">Locked</option>
-                  <option value="None">None</option>
-                </select>
-              </div>
             </div>
 
             <div className="mb-4 w-full flex space-x-4">
@@ -200,7 +183,7 @@ function EditLiveWall({
                   className="hidden"
                   id="fileInputImage"
                   placeholder="Upload Image"
-                  required
+                  
                 />
                 <button
                   type="button"
@@ -242,7 +225,7 @@ function EditLiveWall({
                   className="hidden"
                   id="fileInputVideo"
                   placeholder="Upload Video"
-                  required
+                  
                 />
                 <button
                   type="button"

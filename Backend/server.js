@@ -9,17 +9,21 @@ const MySQLStore = require("express-mysql-session")(session);
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const fse = require('fs-extra');
 const { promisify } = require("util");
-const sharp = require('sharp')
-const app = express();
+const sharp = require('sharp');
+const bcrypt = require('bcrypt');
 const port = process.env.PORT;
+
+
+const app = express();
 
 // MySQL Connection
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",
-  database: "wall_snaps",
+  database: "wall_snap",
 });
 const query = promisify(db.query).bind(db);
 
@@ -97,22 +101,38 @@ app.use("/public", express.static("public"));
 
 // User Login
 
-app.post("/users", (rq, rs) => {
-  const sql = "SELECT * FROM users WHERE username =? AND password = ?";
+app.post("/users", (req, res) => {
+  const sql = "SELECT * FROM users WHERE username = ?";
 
-  db.query(sql, [rq.body.username, rq.body.password], (err, data) => {
-    if (err) return rs.json("Error");
-    if (data.length > 0) {
-      rq.session.username = data[0].username;
-      console.log(rq.session.username);
+  db.query(sql, [req.body.username], async (err, data) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
 
-      if (data[0].username == rq.body.username) {
-        return rs.json({ login: true });
+    if (data.length === 0) {
+      // No user found with that username
+      return res.json({ login: false, message: "User not found" });
+    }
+
+    const user = data[0];
+
+    try {
+      // Compare the provided password with the stored hash
+      const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+
+      if (passwordMatch) {
+        // Password is correct
+        req.session.username = user.username;
+        console.log(req.session.username);
+        return res.json({ login: true });
       } else {
-        return rs.json({ login: false });
+        // Password is incorrect
+        return res.json({ login: false, message: "Incorrect password" });
       }
-    } else {
-      return rs.json({ login: false });
+    } catch (bcryptError) {
+      console.error("Bcrypt error:", bcryptError);
+      return res.status(500).json({ error: "Password comparison failed" });
     }
   });
 });
@@ -145,14 +165,9 @@ app.post("/logout", (req, res) => {
 // Password reset route
 
 app.post("/reset-password", async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
 
-  const { oldPassword, newPassword, id } = req.body;
-  const userId = id ;
-  
-  console.log('User ID : ', userId)
-
-
-  if ( !oldPassword || !newPassword) {
+  if (!oldPassword || !newPassword) {
     return res
       .status(400)
       .json({ message: "Old and new passwords are required" });
@@ -160,36 +175,34 @@ app.post("/reset-password", async (req, res) => {
 
   try {
     // Retrieve the current password from the database
-    const [rows] = await query(
-      "SELECT password FROM users WHERE id = ?",
-      [userId]
-    );
-    console.log("Query result:", [rows]);
+    const rows = await query("SELECT password FROM users WHERE id = 2");
 
-    // if (!rows || rows.length === 0) {
-    //   return res.status(404).json({ message: "User not found" });
-    // }
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // const currentPassword = rows[0].password;
+    const currentPassword = rows[0].password;
 
-    // // Compare old password with the current password
-    // if (oldPassword !== currentPassword) {
-    //   return res.status(400).json({ message: "Old password is incorrect" });
-    // }
+    // Compare old password with the current password
+    const passwordMatch = await bcrypt.compare(oldPassword, currentPassword);
+    console.log('password match', passwordMatch);
 
-    // // Hash the new password and update it in the database
-    // await query("UPDATE users SET password = ? WHERE username = ?", [
-    //   newPassword,
-    //   username,
-    // ]);
+    if (!passwordMatch) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
 
-    // res.json({ message: "Password reset successful" });
-  }
-   catch (error) {
+    // Hash the new password
+    const saltRounds = 10; // You can adjust this for stronger hashing
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update the database with the hashed new password
+    await query("UPDATE users SET password = ? WHERE id = 2", [hashedNewPassword]);
+
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
-
 });
 
 // Privacy Policies - GET
@@ -260,7 +273,7 @@ app.post("/termsof_use", (req, res) => {
 
 //Live Wallpaper Images - GET
 app.get("/livewallpapers", (req, res) => {
-  const sql = "SELECT * FROM  livewallpapers";
+  const sql = "SELECT * FROM  livewallpapers ORDER BY id DESC";
   db.query(sql, (err, data) => {
     if (err) {
       console.log("Error querying database:", err);
@@ -270,7 +283,7 @@ app.get("/livewallpapers", (req, res) => {
   });
 });
 
-// Search Live Wallpapers
+// Search Wallpapers
 
 app.get("/wallpaper_gallery/search", (req, res) => {
   const { query } = req.query;
@@ -288,57 +301,75 @@ app.get("/wallpaper_gallery/search", (req, res) => {
 // Live Wallpaper Images - POST
 app.post(
   "/livewallpapers",
-  upload.fields([{ name: "thumbnail" }, { name: "video" }]),
+  upload.fields([{ name: "image" }, { name: "video" }]),
   async (req, res) => {
     try {
-      const { id, category, type, tags, featured } = req.body;
-      const thumbnail = req.files["thumbnail"]
-        ? req.files["thumbnail"][0].path
+      const { id, category, tags, featured } = req.body;
+      const image = req.files["image"]
+        ? req.files["image"][0].path
         : null;
       const video = req.files["video"] ? req.files["video"][0].path : null;
 
-      if (!thumbnail) {
-        return res.status(400).json({ message: "Thumbnail is required" });
+      if (!image) {
+        return res.status(400).json({ message: "image is required" });
       }
 
-      const reducedPath = path.join(
-        "uploads",
-        `reduced_${path.basename(thumbnail)}`
-      );
+      console.log('Original image path:', image);
+
+      // Use currentDir instead of __dirname
+      const resizedDir = path.join( 'public', 'assets', 'resized');
+      const reducedPath = path.join(resizedDir, path.basename(image));
+
+      console.log('Reduced thumbnail path:', reducedPath);
+
+      // Ensure the resized directory exists
+      await fse.ensureDir(resizedDir);
+      console.log('Resized directory ensured');
 
       // Reduce image quality and save it
-      await sharp(thumbnail).jpeg({ quality: 50 }).toFile(reducedPath);
+      await sharp(image)
+        .jpeg({ quality: 50 })
+        .toFile(reducedPath);
+
+      console.log('Reduced image saved successfully');
 
       const sql =
-        "INSERT INTO livewallpapers (id, thumbnail, reducedThumbnail, video, category, type, tags, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-      db.query(
-        sql,
-        [id, thumbnail, reducedPath, video, category, type, tags, featured],
-        (err, result) => {
-          if (err) {
-            console.error("Error inserting into database:", err);
-            return res.status(500).json({ message: "Failed to insert data" });
+        "INSERT INTO livewallpapers (id, image, thumbnail, video, category, tags, featured) VALUES ( ?, ?, ?, ?, ?, ?, ?)";
+      
+      await new Promise((resolve, reject) => {
+        db.query(
+          sql,
+          [id, image, reducedPath, video, category, tags, featured],
+          (err, result) => {
+            if (err) {
+              console.error("Error inserting into database:", err);
+              reject(err);
+            } else {
+              resolve(result);
+            }
           }
-          res.send("Live wallpaper data inserted into database");
-        }
-      );
+        );
+      });
+
+      res.json({ message: "Live wallpaper data inserted into database" });
     } catch (error) {
-      console.error("Error processing image:", error);
-      res.status(500).send("Server error");
+      console.error("Error in livewallpapers route:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
+
 //Live WallPapers - PUT
 app.put(
   "/livewallpapers/:id",
   upload.fields([
-    { name: "thumbnail", maxCount: 1 },
+    { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),
   (req, res) => {
     const { id } = req.params;
-    const { category, livetype, tags } = req.body;
-    let thumbnail = req.files.thumbnail ? req.files.thumbnail[0].path : null;
+    const { category, tags } = req.body;
+    let image = req.files.image ? req.files.image[0].path : null;
     let video = req.files.video ? req.files.video[0].path : null;
 
     // Fetch the existing entry
@@ -357,19 +388,17 @@ app.put(
 
       // Use current values if new values are not provided
       const updatedCategory = category || currentRecord.category;
-      const updatedLivetype = livetype || currentRecord.livetype;
       const updatedTags = tags || currentRecord.tags;
-      const updatedThumbnail = thumbnail || currentRecord.thumbnail;
+      const updatedImage = image || currentRecord.image;
       const updatedVideo = video || currentRecord.video;
 
       // Update the entry
       const updateSql =
-        "UPDATE livewallpapers SET category = ?, livetype = ?, tags = ?, thumbnail = ?, video = ? WHERE id = ?";
+        "UPDATE livewallpapers SET category = ?,  tags = ?, image = ?, video = ? WHERE id = ?";
       const params = [
-        updatedCategory,
-        updatedLivetype,
+        updatedCategory,   
         updatedTags,
-        updatedThumbnail,
+        updatedImage,
         updatedVideo,
         id,
       ];
@@ -382,9 +411,9 @@ app.put(
         res.json({
           id,
           category: updatedCategory,
-          livetype: updatedLivetype,
+          
           tags: updatedTags,
-          thumbnail: updatedThumbnail,
+          image: updatedImage,
           video: updatedVideo,
         });
       });
@@ -413,9 +442,8 @@ app.put("/livewallpapers/:id/featured", (req, res) => {
 // Live Wallpapers Images - DELETE
 app.delete("/livewallpapers/:id", (req, res) => {
   const { id } = req.params;
-  const getImageSql =
-    "SELECT thumbnail, video FROM livewallpapers WHERE id = ?";
-  db.query(getImageSql, [id], (err, result) => {
+  const sql = "SELECT * FROM livewallpapers WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
     if (err) {
       console.log("Error querying database:", err);
       return res.status(500).json({ message: "Database error" });
@@ -423,41 +451,77 @@ app.delete("/livewallpapers/:id", (req, res) => {
     if (result.length === 0) {
       return res.status(404).json({ message: "Image not found" });
     }
-    const imagePath = result[0].thumbnail;
-    const videoPath = result[0].video;
-
-    fs.unlink(imagePath, (unlinkErr1) => {
-      if (unlinkErr1) {
-        console.log("Error deleting image file:", unlinkErr1);
-        return res.status(500).json({ message: "Failed to delete image" });
-      }
-      fs.unlink(videoPath, (unlinkErr2) => {
-        if (unlinkErr2) {
-          console.log("Error deleting video file:", unlinkErr2);
-          return res.status(500).json({ message: "Failed to delete video" });
+    const imagePath = result[0].image;
+    if (imagePath) {
+      fs.unlink(imagePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.log("Error deleting image file:", unlinkErr);
+          return res.status(500).json({ message: "Failed to delete image" });
         }
-        const deleteSql = "DELETE FROM livewallpapers WHERE id = ?";
-        db.query(deleteSql, [id], (deleteErr, deleteResult) => {
-          if (deleteErr) {
-            console.log("Error deleting record:", deleteErr);
-            return res.status(500).json({ message: "Failed to delete record" });
-          }
-          res.json(deleteResult);
-        });
+        deleteRecordLiveWall(id, res);
       });
-    });
+    } else {
+      deleteRecordLiveWall(id, res);
+    }
+  });
+});
+
+function deleteRecordLiveWall(id, res) {
+  const deleteSql = "DELETE FROM livewallpapers WHERE id = ?";
+  db.query(deleteSql, [id], (deleteErr, deleteResult) => {
+    if (deleteErr) {
+      console.error("Error deleting record:", deleteErr);
+      return res.status(500).json({ message: "Failed to delete record" });
+    }
+    res.json(deleteResult);
+  });
+}
+
+
+//Live Category Images - POST
+app.post("/livecategories", upload.single("image"), (req, res) => {
+  const { id, title } = req.body;
+  const image = req.file.path;
+
+  const sql =
+    "INSERT INTO livecategories (id, title, image) VALUES ( ?, ?, ?)";
+
+  db.query(sql, [id, title, image], (err, result) => {
+    if (err) {
+      console.log("Error inserting into database:", err);
+      return res.status(500).json({ message: "Failed to insert data" });
+    }
+    res.json(result);
   });
 });
 
 //Live Category Images - GET
 app.get("/livecategories", (req, res) => {
-  const sql = "SELECT * FROM  livecategories";
+  const sql = "SELECT * FROM  livecategories ORDER BY id DESC";
   db.query(sql, (err, data) => {
     if (err) {
       console.log("Error querying database:", err);
       return res.status(500).json({ message: "Failed to fetch data" });
     }
     return res.json(data);
+  });
+});
+
+
+
+// Count Images by Title - GET
+app.get("/image-count-livecat", (req, res) => {
+  const query = `
+        SELECT title, COUNT(*) as count
+        FROM livecategories
+        GROUP BY title;
+    `;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log("Error querying database:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    res.json(results);
   });
 });
 
@@ -474,7 +538,9 @@ app.get("/livecategories/search", (req, res) => {
     }
   });
 });
-// Live Category Images - POST
+
+
+// Live Category Images - PUT
 app.put("/livecategories/:id", upload.single("image"), (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
@@ -517,38 +583,47 @@ app.put("/livecategories/:id", upload.single("image"), (req, res) => {
 // Live Category Images - DELETE
 app.delete("/livecategories/:id", (req, res) => {
   const { id } = req.params;
-  const sql = "SELECT image FROM livecategories WHERE id = ?";
+  const sql = "SELECT * FROM livecategories WHERE id = ?";
   db.query(sql, [id], (err, result) => {
     if (err) {
       console.log("Error querying database:", err);
       return res.status(500).json({ message: "Database error" });
     }
-    if (result.length == 0) {
+    if (result.length === 0) {
       return res.status(404).json({ message: "Image not found" });
     }
     const imagePath = result[0].image;
-    fs.unlink(imagePath, (unlinkErr) => {
-      if (unlinkErr) {
-        console.log("Error deleting image file:", unlinkErr);
-        return res.status(500).json({ message: "Failed to delete image" });
-      }
-      const deleteSql = "DELETE FROM livecategories WHERE id = ?";
-      db.query(deleteSql, [id], (deleteErr, deleteResult) => {
-        if (deleteErr) {
-          console.error("Error deleting record:", deleteErr);
-          return res.status(500).json({ message: "Failed to delete record" });
+    if (imagePath) {
+      fs.unlink(imagePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.log("Error deleting image file:", unlinkErr);
+          return res.status(500).json({ message: "Failed to delete image" });
         }
-        res.json(deleteResult);
+        deleteRecordLiveCat(id, res);
       });
-    });
+    } else {
+      deleteRecordLiveCat(id, res);
+    }
   });
 });
-// Count Images by Path - GET
+
+function deleteRecordLiveCat(id, res) {
+  const deleteSql = "DELETE FROM livecategories WHERE id = ?";
+  db.query(deleteSql, [id], (deleteErr, deleteResult) => {
+    if (deleteErr) {
+      console.error("Error deleting record:", deleteErr);
+      return res.status(500).json({ message: "Failed to delete record" });
+    }
+    res.json(deleteResult);
+  });
+}
+
+// Count Images by Title - GET
 app.get("/image-count", (req, res) => {
   const query = `
-        SELECT image, COUNT(*) as count
+        SELECT title, COUNT(*) as count
         FROM new_cat
-        GROUP BY image HAVING COUNT(*) >= 1;
+        GROUP BY title;
     `;
   db.query(query, (err, results) => {
     if (err) {
@@ -559,9 +634,10 @@ app.get("/image-count", (req, res) => {
   });
 });
 
+
 // Category Images - GET
 app.get("/new_cat", (req, res) => {
-  const sql = "SELECT * FROM new_cat";
+  const sql = "SELECT * FROM new_cat ORDER BY id DESC ";
   db.query(sql, (err, data) => {
     if (err) {
       console.error("Error querying database:", err);
@@ -587,13 +663,13 @@ app.get("/new_cat/search", (req, res) => {
 
 // Category Images - POST
 app.post("/new_cat", upload.single("image"), (req, res) => {
-  const { id, title, count } = req.body;
+  const { id, title } = req.body;
   const image = req.file.path;
 
   const sql =
-    "INSERT INTO new_cat (id, title, count, image) VALUES (?, ?, ?, ?)";
+    "INSERT INTO new_cat (id, title, image) VALUES ( ?, ?, ?)";
 
-  db.query(sql, [id, title, count, image], (err, result) => {
+  db.query(sql, [id, title, image], (err, result) => {
     if (err) {
       console.log("Error inserting into database:", err);
       return res.status(500).json({ message: "Failed to insert data" });
@@ -637,11 +713,12 @@ app.put("/new_cat/:id", upload.single("image"), (req, res) => {
   });
 });
 
+
 // Category Images - DELETE
 app.delete("/new_cat/:id", (req, res) => {
   const { id } = req.params;
-  const getImageSql = "SELECT image FROM new_cat WHERE id = ?";
-  db.query(getImageSql, [id], (err, result) => {
+  const sql = "SELECT * FROM new_cat WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
     if (err) {
       console.log("Error querying database:", err);
       return res.status(500).json({ message: "Database error" });
@@ -650,26 +727,34 @@ app.delete("/new_cat/:id", (req, res) => {
       return res.status(404).json({ message: "Image not found" });
     }
     const imagePath = result[0].image;
-    fs.unlink(imagePath, (unlinkErr) => {
-      if (unlinkErr) {
-        console.log("Error deleting image file:", unlinkErr);
-        return res.status(500).json({ message: "Failed to delete image" });
-      }
-      const deleteSql = "DELETE FROM new_cat WHERE id = ?";
-      db.query(deleteSql, [id], (deleteErr, deleteResult) => {
-        if (deleteErr) {
-          console.error("Error deleting record:", deleteErr);
-          return res.status(500).json({ message: "Failed to delete record" });
+    if (imagePath) {
+      fs.unlink(imagePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.log("Error deleting image file:", unlinkErr);
+          return res.status(500).json({ message: "Failed to delete image" });
         }
-        res.json(deleteResult);
+        deleteRecord(id, res);
       });
-    });
+    } else {
+      deleteRecord(id, res);
+    }
   });
 });
 
+function deleteRecord(id, res) {
+  const deleteSql = "DELETE FROM new_cat WHERE id = ?";
+  db.query(deleteSql, [id], (deleteErr, deleteResult) => {
+    if (deleteErr) {
+      console.error("Error deleting record:", deleteErr);
+      return res.status(500).json({ message: "Failed to delete record" });
+    }
+    res.json(deleteResult);
+  });
+}
+
 // Wallpaper Gallery - GET
 app.get("/wallpaper_gallery", (req, res) => {
-  const sql = "SELECT * FROM wallpaper_gallery";
+  const sql = "SELECT * FROM wallpaper_gallery ORDER BY id DESC";
   db.query(sql, (err, data) => {
     if (err) {
       console.log("Error querying database:", err);
@@ -693,20 +778,65 @@ app.get("/wallpaper_gallery/search", (req, res) => {
   });
 });
 
-// Wallpaper Gallery - POST
+// Wallpaper - POST
 
-app.post("/wallpaper_gallery", upload.single("image"), (req, res) => {
-  const { id, category, type, tags, featured } = req.body;
-  const image = req.file.path;
-  const sql =
-    "INSERT INTO wallpaper_gallery (id, image, category, type, tags, featured) VALUES (?, ?, ?, ?, ?, ?)";
-  db.query(sql, [id, image, category, type, tags, featured], (err, result) => {
-    if (err) {
-      console.log("Error inserting into database:", err);
-      return res.status(500).json({ message: "Failed to insert data" });
+app.post("/wallpaper_gallery", upload.single("image"), async (req, res) => {
+  try {
+    const { id, category, tags, featured } = req.body;
+    
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: "Image is required" });
     }
-    res.json(result);
-  });
+    
+    const image = req.file.path; // Changed from req.files to req.file
+
+    const resizedDir = path.join(
+  
+      "public",
+      "assets",
+      "simplethumbnail"
+    );
+    const reducedPath = path.join(resizedDir, `thumbnail_${path.basename(image)}`);
+
+    console.log("Original image path:", image);
+    console.log("Thumbnail path:", reducedPath);
+
+    // Ensure the resized directory exists
+    await fse.ensureDir(resizedDir);
+    console.log("Thumbnail directory ensured");
+
+    // Generate thumbnail with reduced size and quality
+    await sharp(image)
+      .resize(300, 300, { fit: 'inside' }) // Resize image to fit within 300x300
+      .jpeg({ quality: 70 }) // Adjust quality as needed
+      .toFile(reducedPath);
+
+    console.log("Thumbnail generated successfully");
+
+    const sql =
+      "INSERT INTO wallpaper_gallery (id, image, thumbnail, category, tags, featured) VALUES (?, ?, ?, ?, ?, ?)";
+
+    await new Promise((resolve, reject) => {
+      db.query(
+        sql,
+        [id, image, reducedPath, category, tags, featured],
+        (err, result) => {
+          if (err) {
+            console.error("Error inserting into database:", err);
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+    });
+
+    res.json({ message: "Wallpaper data inserted into database" });
+  } catch (error) {
+    console.error("Error processing image:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 });
 
 // wallpaper feature update
@@ -730,7 +860,7 @@ app.put("/wallpaper_gallery/:id/featured", (req, res) => {
 // Wallpaper Gallery - PUT
 app.put("/wallpaper_gallery/:id", upload.single("image"), (req, res) => {
   const { id } = req.params;
-  const { category, type, tags } = req.body;
+  const { category, tags } = req.body;
   let image = req.file ? req.file.path : null;
 
   // Fetch the existing entry
@@ -749,16 +879,16 @@ app.put("/wallpaper_gallery/:id", upload.single("image"), (req, res) => {
 
     // Use current values if new values are not provided
     const updatedCategory = category || currentRecord.category;
-    const updatedType = type || currentRecord.type;
+    
     const updatedTags = tags || currentRecord.tags;
     const updatedImage = image || currentRecord.image;
 
     // Update the entry
     const updateSql =
-      "UPDATE wallpaper_gallery SET category = ?, type = ?, tags = ?, image = ? WHERE id = ?";
+      "UPDATE wallpaper_gallery SET category = ?,  tags = ?, image = ? WHERE id = ?";
     const params = [
       updatedCategory,
-      updatedType,
+      
       updatedTags,
       updatedImage,
       id,
@@ -772,7 +902,7 @@ app.put("/wallpaper_gallery/:id", upload.single("image"), (req, res) => {
       res.json({
         id,
         category: updatedCategory,
-        type: updatedType,
+     
         tags: updatedTags,
         image: updatedImage,
       });
@@ -783,8 +913,8 @@ app.put("/wallpaper_gallery/:id", upload.single("image"), (req, res) => {
 // Wallpaper Gallery - DELETE
 app.delete("/wallpaper_gallery/:id", (req, res) => {
   const { id } = req.params;
-  const getImageSql = "SELECT image FROM wallpaper_gallery WHERE id = ?";
-  db.query(getImageSql, [id], (err, result) => {
+  const sql = "SELECT * FROM wallpaper_gallery WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
     if (err) {
       console.log("Error querying database:", err);
       return res.status(500).json({ message: "Database error" });
@@ -793,23 +923,30 @@ app.delete("/wallpaper_gallery/:id", (req, res) => {
       return res.status(404).json({ message: "Image not found" });
     }
     const imagePath = result[0].image;
-    fs.unlink(imagePath, (unlinkErr) => {
-      if (unlinkErr) {
-        console.log("Error deleting image file:", unlinkErr);
-        return res.status(500).json({ message: "Failed to delete image" });
-      }
-      const deleteSql = "DELETE FROM wallpaper_gallery WHERE id = ?";
-      db.query(deleteSql, [id], (deleteErr, deleteResult) => {
-        if (deleteErr) {
-          console.log("Error deleting record:", deleteErr);
-          return res.status(500).json({ message: "Failed to delete record" });
+    if (imagePath) {
+      fs.unlink(imagePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.log("Error deleting image file:", unlinkErr);
+          return res.status(500).json({ message: "Failed to delete image" });
         }
-        res.json(deleteResult);
+        deleteRecordWall(id, res);
       });
-    });
+    } else {
+      deleteRecordWall(id, res);
+    }
   });
 });
 
+function deleteRecordWall(id, res) {
+  const deleteSql = "DELETE FROM wallpaper_gallery WHERE id = ?";
+  db.query(deleteSql, [id], (deleteErr, deleteResult) => {
+    if (deleteErr) {
+      console.error("Error deleting record:", deleteErr);
+      return res.status(500).json({ message: "Failed to delete record" });
+    }
+    res.json(deleteResult);
+  });
+}
 // Server Listening
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

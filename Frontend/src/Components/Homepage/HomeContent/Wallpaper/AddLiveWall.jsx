@@ -6,10 +6,9 @@ import axios from "axios";
 function AddLiveWall({ onWallpaperAdded, onRequestClose }) {
   const [id, setId] = useState("");
   const [thumbnail, setThumbnail] = useState(null);
-  const [resizedThumbnail, setResizedThumbnail] = useState(null);
+  const [image, setImage] = useState(null);
   const [video, setVideo] = useState(null);
   const [category, setCategory] = useState("");
-  const [type, setType] = useState("");
   const [tags, setTags] = useState("");
   const [featured, setFeatured] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -19,11 +18,10 @@ function AddLiveWall({ onWallpaperAdded, onRequestClose }) {
     e.preventDefault();
     const formData = new FormData();
     formData.append("id", id);
+    formData.append("image", image);
     formData.append("thumbnail", thumbnail);
-    formData.append("resizedThumbnail", resizedThumbnail);
     formData.append("video", video);
     formData.append("category", category);
-    formData.append("type", type);
     formData.append("tags", tags);
     formData.append("featured", featured);
 
@@ -31,11 +29,10 @@ function AddLiveWall({ onWallpaperAdded, onRequestClose }) {
       const response = await axios.post("http://localhost:5000/livewallpapers", formData);
       onWallpaperAdded(response.data);
       setId("");
+      setImage(null);
       setThumbnail(null);
-      setResizedThumbnail(null);
       setVideo(null);
       setCategory("");
-      setType("");
       setTags("");
       setFeatured("");
       setSelectedImage(null);
@@ -48,7 +45,7 @@ function AddLiveWall({ onWallpaperAdded, onRequestClose }) {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setThumbnail(file);
+    setImage(file);
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -102,20 +99,6 @@ function AddLiveWall({ onWallpaperAdded, onRequestClose }) {
                   <option value="Technology">Technology</option>
                   <option value="Animals">Animals</option>
                   <option value="Abstract">Abstract</option>
-                </select>
-              </div>
-              <div className="w-1/2">
-                <label className="block text-gray-700">Select Type</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="mt-1 p-3 border rounded-full w-full text-[#787878]"
-                  required
-                >
-                  <option value="">Select Type</option>
-                  <option value="Premium">Premium</option>
-                  <option value="Locked">Locked</option>
-                  <option value="None">None</option>
                 </select>
               </div>
             </div>

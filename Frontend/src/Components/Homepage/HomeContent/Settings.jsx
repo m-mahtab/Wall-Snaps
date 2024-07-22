@@ -44,7 +44,7 @@ function Settings() {
                 App Name Title
               </label>
               <input
-                id="appName"
+                id="appName" 
                 type="text"
                 value={appName}
                 onChange={(e) => setAppName(e.target.value)}

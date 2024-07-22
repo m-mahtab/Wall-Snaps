@@ -5,6 +5,7 @@ import LiveWallModel from "./LiveWallModel";
 import EditLiveWall from "./EditLiveWall";
 import VideoModal from "./VideoModal";
 
+
 function LiveWallpaper() {
   const [currentPage, setCurrentPage] = useState(0);
   const [data, setData] = useState([]);
@@ -170,7 +171,6 @@ function LiveWallpaper() {
               <th className="w-1/6 py-2">Live Wallpapers</th>
               <th className="w-1/6 py-2">Category</th>
               <th className="w-1/6 py-2">Tags</th>
-              <th className="w-1/6 py-2">Type</th>
               <th className="w-1/6 py-2">Featured</th>
               <th className="w-1/6 py-2">Actions</th>
             </tr>
@@ -203,11 +203,7 @@ function LiveWallpaper() {
                 </td>
                 <td className="px-4 py-2">{item.category}</td>
                 <td className="px-4 py-2">{item.tags}</td>
-                <td className="type">
-                  <span className="badge badge-info border-radius-5">
-                    {item.type}{" "}
-                  </span>
-                </td>
+               
                 <td className="px-4 py-2">
                   <label className="inline-flex items-center cursor-pointer">
                     <input
