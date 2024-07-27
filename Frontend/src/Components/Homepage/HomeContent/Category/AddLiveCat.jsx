@@ -47,11 +47,13 @@ function AddLiveCat({ onLiveAdded, onRequestClose }) {
 
   return (
     <div className="h-auto w-full bg-white rounded-5xl">
-      <div className="relative h-10 w-full border-b-2 border-b-[#f2f2f2]">
-        <h2 className="font-bold text-xl cat-bar-add mb-4 px-4">
-          Add Live Category
-        </h2>
-      </div>
+      <div className=" w-full border-b-2 border-b-[#f2f2f2]">
+          <div className="relative">
+            <h2 className="font-bold text-xl  cat-bar-add my-5 px-4">
+              Add Live Category
+            </h2>
+          </div>
+        </div>
       <div className="px-5">
         <form onSubmit={handleSubmit} className="py-6">
           <div className="mb-4">
@@ -60,7 +62,7 @@ function AddLiveCat({ onLiveAdded, onRequestClose }) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 px-2 py-4 border rounded-full w-full"
+              className="mt-1 p-1 md:p-2 xl:px-2 xl:py-4 border rounded-full w-full"
               required
             />
           </div>
@@ -71,7 +73,7 @@ function AddLiveCat({ onLiveAdded, onRequestClose }) {
                 <img
                   src={selectedImage}
                   alt="Selected"
-                  style={{ maxWidth: "100%", maxHeight: "100%" }}
+                 className="w-full h-full object-cover rounded-3xl"
                 />
               ) : (
                 <BiImages className="opacity-40 text-5xl" />

@@ -47,9 +47,13 @@ function AddCategory({ onCategoryAdded, onRequestClose }) {
 
     return (
         <div className="h-auto w-full bg-white rounded-5xl">
-            <div className='relative h-10 w-full border-b-2 border-b-[#f2f2f2]'>
-                <h2 className="font-bold text-xl cat-bar-add mb-4 px-4">Add Category</h2>
-            </div>
+            <div className=" w-full border-b-2 border-b-[#f2f2f2]">
+          <div className="relative">
+            <h2 className="font-bold text-xl  cat-bar-add my-5 px-4">
+              Add Category
+            </h2>
+          </div>
+        </div>
             <div className='px-5'>
                 <form onSubmit={handleSubmit} className='py-6'>
                     <div className="mb-4">
@@ -58,7 +62,7 @@ function AddCategory({ onCategoryAdded, onRequestClose }) {
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="mt-1 px-2 py-4 border rounded-full w-full"
+                            className="mt-1 p-1 md:p-2 xl:px-2 xl:py-4 border rounded-full w-full"
                             required
                         />
                     </div>
@@ -66,7 +70,7 @@ function AddCategory({ onCategoryAdded, onRequestClose }) {
                         <label className="block text-gray-700">Image</label>
                         <div className="mt-1  bg-[#ededed] border rounded-3xl flex items-center justify-center w-3/5 h-44">
                             {selectedImage ? (
-                                <img src={selectedImage} alt="Selected" className='w-full h-full rounded-3xl' />
+                                <img src={selectedImage} alt="Selected"  className="w-full h-full object-cover rounded-3xl" />
                             ) : (
                                 <BiImages className='opacity-40 text-5xl' />
                             )}

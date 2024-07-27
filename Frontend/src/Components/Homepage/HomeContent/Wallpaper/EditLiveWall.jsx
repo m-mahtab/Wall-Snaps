@@ -20,7 +20,7 @@ function EditLiveWall({
       bottom: "auto",
       transform: "translate(-50%, -50%)",
       padding: "",
-      borderRadius: "0.5rem",
+      borderRadius: "1.5rem",
       overflowY: "auto",
       overflowX: "hidden",
     },
@@ -29,7 +29,7 @@ function EditLiveWall({
     },
   };
   const [id, setId] = useState("");
-  const [thumbnail, setThumbnail] = useState(null);
+  const [image, setImage] = useState(null);
   const [video, setVideo] = useState(null);
   const [category, setCategory] = useState("");
   const [tags, setTags] = useState("");
@@ -42,7 +42,7 @@ function EditLiveWall({
       setId(editItem.id);
       setCategory(editItem.category);
       setTags(editItem.tags);
-      setThumbnail(null); // Reset thumbnail state for new selection
+      setImage(null); // Reset image state for new selection
       setVideo(null); // Reset video state for new selection
       setSelectedImage(currentImage);
       setSelectedMedia(currentVideo);
@@ -54,7 +54,7 @@ function EditLiveWall({
     e.preventDefault();
     const formData = new FormData();
     formData.append("id", id);
-    formData.append("thumbnail", thumbnail); // Append new thumbnail file if changed
+    formData.append("image", image); // Append new image file if changed
     formData.append("video", video); // Append new video file if changed
     formData.append("category", category);
     formData.append("tags", tags);
@@ -87,7 +87,7 @@ function EditLiveWall({
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setThumbnail(file);
+    setImage(file);
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -133,7 +133,7 @@ function EditLiveWall({
                 type="text"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                className="mt-1 p-3 border rounded-full w-full"
+                className="mt-1  px-3 py-2 md:px-3  xl:py-4 border rounded-full w-full"
                 required
               />
             </div>
@@ -144,7 +144,7 @@ function EditLiveWall({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1 py-3 border rounded-full w-full text-[#787878]"
+                  className="mt-1 px-3 py-2 md:px-3  xl:py-4 border rounded-full w-full text-[#787878]"
                   required
                 >
                   <option value="">Select Category</option>
@@ -159,20 +159,20 @@ function EditLiveWall({
             <div className="mb-4 w-full flex space-x-4">
               <div className="w-1/2">
                 <label className="block text-gray-700">Image</label>
-                <div className="mt-1 p-2 bg-[#ededed] border rounded-3xl flex items-center justify-center h-44">
+                <div className="mt-1  bg-[#ededed] border rounded-3xl flex items-center justify-center h-44">
                   {selectedImage ? (
                     <img
                       src={selectedImage}
                       alt="Selected"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
-                      className="rounded-3xl"
+                     
+                      className="rounded-3xl h-full w-full object-cover"
                     />
                   ) : (
                     <img
                       src={currentImage}
                       alt="Current"
-                      className="rounded-3xl p-0"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
+                      className="rounded-3xl h-full w-full object-cover"
+                     
                     />
                   )}
                 </div>
@@ -183,7 +183,6 @@ function EditLiveWall({
                   className="hidden"
                   id="fileInputImage"
                   placeholder="Upload Image"
-                  
                 />
                 <button
                   type="button"
@@ -205,6 +204,7 @@ function EditLiveWall({
                         controls
                         width="100%"
                         height="100%"
+                     
                       />
                     ) : (
                       <ReactPlayer
@@ -225,7 +225,6 @@ function EditLiveWall({
                   className="hidden"
                   id="fileInputVideo"
                   placeholder="Upload Video"
-                  
                 />
                 <button
                   type="button"
@@ -257,13 +256,11 @@ function EditLiveWall({
           </form>
         </div>
       </div>
-      <div className="h-9 w-9 absolute z-40 top-0 -right-0 rounded-xl bg-white flex justify-center items-center">
-        <div
-          onClick={closeModal}
-          className="flex justify-center items-center close-button"
-        >
-          &times;
-        </div>
+      <div
+        onClick={closeModal}
+        className="text-2xl absolute z-50 top-2 right-2 shadow-xl shadow-slate-200 rounded-xl h-9 w-9 bg-white flex justify-center items-center close-button"
+      >
+        &times;
       </div>
     </Modal>
   );

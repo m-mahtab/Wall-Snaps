@@ -48,9 +48,11 @@ function WallPaper() {
 
   const handleWallpaperAdded = (newWallpaper) => {
     setData([...data, newWallpaper]);
+    setFilteredData([...filteredData, newWallpaper]);
     setIsModalOpen(false);
   };
 
+ 
   const handleWallpaperEdit = (updatedData) => {
     const updatedItems = data.map((item) =>
       item.id === updatedData.id ? updatedData : item
@@ -113,34 +115,34 @@ function WallPaper() {
   const totalcount = filteredData.length;
 
   return (
-    <div className="h-auto py-8">
-      <div className="h-auto py-4 bg-white rounded-2xl shadow-xl">
-        <div className="h-auto py-5 relative">
-          <div className="flex justify-between px-8">
-            <h2 className="font-bold text-xl cat-bar">Wallpaper</h2>
+    <div className="h-auto my-2 md:my-0 py-4   lg:py-6 xl:py-8">
+      <div className="h-auto bg-white rounded-2xl shadow-xl">
+        <div className="relative py-3 lg:py-4 xl:py-5">
+          <div className="flex justify-between item-center px-3 md:px-4 lg:px-6 xl:px-8">
+            <h2 className="font-bold text-lg xl:text-xl cat-bar">Wallpaper</h2>
             <button
               onClick={openModal}
-              className="bg-cus-black text-white px-9 py-3 rounded-full font-semibold cat-button-shadow"
+              className="text-xs md:text-base bg-cus-black text-white px-3 md:px-7 xl:px-9  py-2  xl:py-3 rounded-full font-semibold cat-button-shadow"
             >
               Add Wallpaper
             </button>
           </div>
         </div>
-        <div className="h-auto py-4 bg-white flex justify-between px-5 border-t-2 border-t-slate-200">
-          <div className="flex items-center justify-center space-x-3 w-1/3">
-            <p className="text-lg">Show</p>
-            <span className="flex items-center justify-center border border-slate-200 rounded-full p-3 w-16">
+        <div className="text-sm md:text-base xl:text-lg  h-auto py-2 xl:py-4 bg-white flex flex-col lg:flex-row  justify-center lg:justify-between px-2 lg:px-5 border-t-2 border-t-[#f2f2f2]">
+          <div className="flex items-center justify-center space-x-1 sm:space-x-2 lg:space-x-3 w-fit">
+            <p className="">Show</p>
+            <span className="flex items-center justify-center border border-[#f2f2f2] rounded-full p-1 md:p-2 lg:p-3 w-10 md:w-14 lg:w-16">
               {totalcount}
             </span>
-            <p className="text-lg">entries </p>
+            <p className="">entries </p>
           </div>
-          <div className="flex items-center justify-between px-3 w-fit">
+          <div className="flex items-center justify-between lg:px-3 w-fit">
             <p>Search:</p>
             <input
               type="text"
               value={searchTerm}
               onChange={handleSearch}
-              className="mt-1 p-3 border border-slate-200 rounded-full"
+              className="mt-1  p-1 md:p-2 lg:p-3 border border-slate-200 rounded-full"
               required
             />
           </div>
@@ -154,8 +156,8 @@ function WallPaper() {
           />
         )}
 
-        <table className="w-full">
-          <thead className="bg-person py-5  h-auto">
+        <table className="min-w-full text-xs sm:text-sm md:text-base">
+          <thead className="bg-[#f2f2f2] py-5 h-auto">
             <tr className="">
               <th className="w-1/6 py-2">Image</th>
               <th className="w-1/6 py-2">Category</th>
@@ -168,14 +170,14 @@ function WallPaper() {
             {currentPageData.map((item) => (
               <tr
                 key={item.id}
-                className="text-center border-b-2  border-gray-300 "
+                className="text-center border-b-2 border-[#f2f2f2] py-10"
               >
-                <td className=" py-5 px-10 flex items-center justify-center">
-                  <div className=" h-36 flex items-center justify-center">
+                <td className=" p-2 md-p-3 xl:p-4 flex items-center justify-center">
+                  <div className="w-20  h-28 flex items-center justify-center flex items-center justify-center">
                     <img
                       src={`http://localhost:5000/${item.thumbnail}`}
                       alt={item.title}
-                      className="h-full rounded-lg w-max"
+                      className="h-full rounded-lg w-full object-cover"
                     />
                   </div>
                 </td>
@@ -193,17 +195,17 @@ function WallPaper() {
                     <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-200 dark:peer-focus:ring-slate-600 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-slate-900"></div>
                   </label>
                 </td>
-                <td className="  pr-8  text-white">
-                  <div className="flex items-center justify-center space-x-3">
+                <td className="  pr-2 md:pr-3 xl:pr-5 text-white">
+                  <div className="flex space-x-3 text-xs sm:text-sm xl:text-base items-center justify-center">
                     <button
                       onClick={() => handleEditClick(item)}
-                      className="h-8 w-16 bg-[#54ca68] font-semibold shadow-xl rounded-md"
+                      className="h-6 lg:h-7 xl:h-8 w-12 md:w-14 xl:w-16 bg-[#54ca68] font-semibold shadow-xl rounded-md"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDeleteClick(item.id)}
-                      className="h-8 w-16 bg-[#fc544b] font-semibold shadow-xl rounded-md"
+                      className="h-6  lg:h-7 xl:h-8 w-12 md:w-14 xl:w-16 bg-[#fc544b] font-semibold shadow-xl rounded-md"
                     >
                       Delete
                     </button>

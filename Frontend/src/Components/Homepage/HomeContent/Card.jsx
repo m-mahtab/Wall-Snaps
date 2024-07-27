@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 function Card({ title, icon, totalcount, url }) {
   return (
-    <div className="">
-      <div className="flex flex-wrap justify-between  p-5 bg-white h-64 w-64 rounded-3xl  border-2 border-[#d9d9d9]">
+    <div className="w-full">
+      <div className="flex flex-wrap justify-between  p-5 bg-white h-64  xl:w-64 rounded-3xl  border-2 border-[#d9d9d9]">
         <div className="h-[70px] w-full  ">
           <div className="icon-shadow w-[60px] h-[60px] flex items-center justify-center rounded-full bg-cus-black  ">
             <span className="text-white text-3xl ">{icon}</span>

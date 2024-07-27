@@ -1,7 +1,6 @@
 import axios from "axios";
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../AuthContext";
-import { useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
@@ -31,6 +30,7 @@ const DummyLogin = () => {
       .post("http://localhost:5000/users", values,)
       .then((res) => {
         if(res.data.login){
+         
           setIsAuthenticated(true);
 
         }else{

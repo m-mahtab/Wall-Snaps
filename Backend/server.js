@@ -165,9 +165,9 @@ app.post("/logout", (req, res) => {
 // Password reset route
 
 app.post("/reset-password", async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+  const {username, oldPassword, newPassword } = req.body;
 
-  if (!oldPassword || !newPassword) {
+  if (!username || !oldPassword || !newPassword) {
     return res
       .status(400)
       .json({ message: "Old and new passwords are required" });
@@ -175,7 +175,7 @@ app.post("/reset-password", async (req, res) => {
 
   try {
     // Retrieve the current password from the database
-    const rows = await query("SELECT password FROM users WHERE id = 2");
+    const rows = await query("SELECT password FROM users WHERE username = ? " , [username]);
 
     if (!rows || rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
@@ -196,7 +196,7 @@ app.post("/reset-password", async (req, res) => {
     const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
     // Update the database with the hashed new password
-    await query("UPDATE users SET password = ? WHERE id = 2", [hashedNewPassword]);
+    await query("UPDATE users SET password = ? WHERE username = ?", [hashedNewPassword, username]);
 
     res.json({ message: "Password reset successful" });
   } catch (error) {
@@ -359,68 +359,105 @@ app.post(
   }
 );
 
-//Live WallPapers - PUT
+// Live Wallpapers - PUT
 app.put(
   "/livewallpapers/:id",
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),
-  (req, res) => {
-    const { id } = req.params;
-    const { category, tags } = req.body;
-    let image = req.files.image ? req.files.image[0].path : null;
-    let video = req.files.video ? req.files.video[0].path : null;
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { category, tags } = req.body;
+      let image = req.files.image ? req.files.image[0].path : null;
+      let video = req.files.video ? req.files.video[0].path : null;
 
-    // Fetch the existing entry
-    const fetchSql = "SELECT * FROM livewallpapers WHERE id = ?";
-    db.query(fetchSql, [id], (fetchErr, fetchResult) => {
-      if (fetchErr) {
-        console.log("Error fetching record:", fetchErr);
-        return res.status(500).json({ message: "Failed to fetch data" });
-      }
+      // Fetch the existing entry
+      const [currentRecord] = await new Promise((resolve, reject) => {
+        db.query("SELECT * FROM livewallpapers WHERE id = ?", [id], (err, results) => {
+          if (err) reject(err);
+          else resolve(results);
+        });
+      });
 
-      if (fetchResult.length === 0) {
+      if (!currentRecord) {
         return res.status(404).json({ message: "Record not found" });
       }
-
-      const currentRecord = fetchResult[0];
 
       // Use current values if new values are not provided
       const updatedCategory = category || currentRecord.category;
       const updatedTags = tags || currentRecord.tags;
-      const updatedImage = image || currentRecord.image;
-      const updatedVideo = video || currentRecord.video;
+      let updatedImage = currentRecord.image;
+      let updatedThumbnail = currentRecord.thumbnail;
+      let updatedVideo = currentRecord.video;
+
+      // Handle image update and thumbnail generation
+      if (image) {
+        const resizedDir = path.join( 'public', 'assets', 'resized');
+        const reducedPath = path.join(resizedDir, path.basename(image));
+        
+        
+        
+        await sharp(image)
+          .resize(300, 300)
+          .jpeg({ quality: 70 })
+          .toFile(reducedPath );
+
+        updatedImage = image;
+        updatedThumbnail = reducedPath;
+
+        // Remove old image and thumbnail if they exist
+        if (currentRecord.image && fs.existsSync(currentRecord.image)) {
+          await fse.remove(currentRecord.image);
+        }
+        if (currentRecord.thumbnail && fs.existsSync(currentRecord.thumbnail)) {
+          await fse.remove(currentRecord.thumbnail);
+        }
+      }
+
+      // Handle video update
+      if (video) {
+        updatedVideo = video;
+        // Remove old video if it exists
+        if (currentRecord.video && fs.existsSync(currentRecord.video)) {
+          await fse.remove(currentRecord.video);
+        }
+      }
 
       // Update the entry
       const updateSql =
-        "UPDATE livewallpapers SET category = ?,  tags = ?, image = ?, video = ? WHERE id = ?";
+        "UPDATE livewallpapers SET category = ?, tags = ?, image = ?, thumbnail = ?, video = ? WHERE id = ?";
       const params = [
-        updatedCategory,   
+        updatedCategory,
         updatedTags,
         updatedImage,
+        updatedThumbnail,
         updatedVideo,
         id,
       ];
 
-      db.query(updateSql, params, (updateErr, updateResult) => {
-        if (updateErr) {
-          console.log("Error updating record:", updateErr);
-          return res.status(500).json({ message: "Failed to update data" });
-        }
-        res.json({
-          id,
-          category: updatedCategory,
-          
-          tags: updatedTags,
-          image: updatedImage,
-          video: updatedVideo,
+      await new Promise((resolve, reject) => {
+        db.query(updateSql, params, (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
         });
       });
-    });
+
+      res.json({
+        id,
+        category: updatedCategory,
+        tags: updatedTags,
+        image: updatedImage,
+        thumbnail: updatedThumbnail,
+        video: updatedVideo,
+      });
+    } catch (error) {
+      console.error("Error updating record:", error);
+      res.status(500).json({ message: "Failed to update data", error: error.message });
+    }
   }
 );
-
 // Live wallpaper feature update
 
 app.put("/livewallpapers/:id/featured", (req, res) => {
@@ -860,14 +897,13 @@ app.put("/wallpaper_gallery/:id/featured", (req, res) => {
 // Wallpaper Gallery - PUT
 app.put("/wallpaper_gallery/:id", upload.single("image"), (req, res) => {
   const { id } = req.params;
-  const { category, tags } = req.body;
-  let image = req.file ? req.file.path : null;
+  const { category, tags, featured } = req.body;
 
   // Fetch the existing entry
   const fetchSql = "SELECT * FROM wallpaper_gallery WHERE id = ?";
   db.query(fetchSql, [id], (fetchErr, fetchResult) => {
     if (fetchErr) {
-      console.log("Error fetching record:", fetchErr);
+      console.error("Error fetching record:", fetchErr);
       return res.status(500).json({ message: "Failed to fetch data" });
     }
 
@@ -879,32 +915,78 @@ app.put("/wallpaper_gallery/:id", upload.single("image"), (req, res) => {
 
     // Use current values if new values are not provided
     const updatedCategory = category || currentRecord.category;
-    
     const updatedTags = tags || currentRecord.tags;
-    const updatedImage = image || currentRecord.image;
+    const updatedFeatured = featured !== undefined ? featured : currentRecord.featured;
 
-    // Update the entry
-    const updateSql =
-      "UPDATE wallpaper_gallery SET category = ?,  tags = ?, image = ? WHERE id = ?";
-    const params = [
-      updatedCategory,
-      
-      updatedTags,
-      updatedImage,
-      id,
-    ];
+    let updatedImage = currentRecord.image;
+    let updatedThumbnail = currentRecord.thumbnail;
 
-    db.query(updateSql, params, (updateErr, updateResult) => {
-      if (updateErr) {
-        console.log("Error updating record:", updateErr);
-        return res.status(500).json({ message: "Failed to update data" });
+    const processImage = (callback) => {
+      if (req.file) {
+        updatedImage = req.file.path;
+
+        const resizedDir = path.join("public", "assets", "simplethumbnail");
+        updatedThumbnail = path.join(resizedDir, `thumbnail_${path.basename(updatedImage)}`);
+
+        console.log("New image path:", updatedImage);
+        console.log("New thumbnail path:", updatedThumbnail);
+
+        fse.ensureDir(resizedDir, (err) => {
+          if (err) {
+            console.error("Error ensuring thumbnail directory:", err);
+            return callback(err);
+          }
+          console.log("Thumbnail directory ensured");
+
+          sharp(updatedImage)
+            .resize(300, 300, { fit: 'inside' })
+            .jpeg({ quality: 70 })
+            .toFile(updatedThumbnail, (err) => {
+              if (err) {
+                console.error("Error generating thumbnail:", err);
+                return callback(err);
+              }
+              console.log("New thumbnail generated successfully");
+              callback(null);
+            });
+        });
+      } else {
+        callback(null);
       }
-      res.json({
-        id,
-        category: updatedCategory,
-     
-        tags: updatedTags,
-        image: updatedImage,
+    };
+
+    processImage((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Error processing image", error: err.message });
+      }
+
+      // Update the entry
+      const updateSql =
+        "UPDATE wallpaper_gallery SET category = ?, tags = ?, featured = ?, image = ?, thumbnail = ? WHERE id = ?";
+      const params = [
+        updatedCategory,
+        updatedTags,
+        updatedFeatured,
+        updatedImage,
+        updatedThumbnail,
+        id
+      ];
+
+      db.query(updateSql, params, (updateErr, updateResult) => {
+        if (updateErr) {
+          console.error("Error updating record:", updateErr);
+          return res.status(500).json({ message: "Failed to update data" });
+        }
+
+        res.json({
+          message: "Wallpaper data updated successfully",
+          id,
+          category: updatedCategory,
+          tags: updatedTags,
+          featured: updatedFeatured,
+          image: updatedImage,
+          thumbnail: updatedThumbnail
+        });
       });
     });
   });

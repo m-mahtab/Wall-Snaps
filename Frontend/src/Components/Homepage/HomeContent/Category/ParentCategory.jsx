@@ -1,59 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import LiveCategory from "./LiveCategory";
 import Category from "./Category";
-import { Link } from "react-router-dom";
 
 function ParentCategory() {
-  const [activeLink, setActiveLink] = useState("/index/category");
+  const location = useLocation();
+  const [activeLink, setActiveLink] = useState(() => {
+    return location.pathname.includes('livecategory') ? 'livecategory' : 'category';
+  });
 
-  const handleColorChange = (link) => {
-    setActiveLink(link);
-  };
+  useEffect(() => {
+    setActiveLink(location.pathname.includes('livecategory') ? 'livecategory' : 'category');
+  }, [location]);
+
   return (
-    <div className="p-8">
-      <div className="w-full h-14 ">
-        <div className="w-72 bg-[#e7e7e7] flex justify-between items-center border border-[#ededed]  rounded-full">
-          <ul className="p-[5px] w-full flex items-center justify-between space-x-3 rounded-full">
-            <li
-              className={` w-2/5  ${
-                activeLink == "/index/category"
-                  ? "bg-cus-black text-white rounded-full h-full "
-                  : ""
-              }`}
-            >
-              {/* <Link to="/index/category"> */}
-                <button
-                  className="px-6 py-3 flex justify-center items-center"
-                  onClick={() => handleColorChange("/index/category")}
-                >
-                  Category
-                </button>
-              {/* </Link> */}
-            </li>
-            <li
-              className={` w-3/5 ${
-                activeLink == "/index/livecategory"
-                  ? "bg-cus-black text-white rounded-full h-full "
-                  : ""
-              }`}
-            >
-              {/* <Link to="/index/livecategory"> */}
-                <button
-                  className="px-6 py-3 flex justify-center items-center"
-                  onClick={() => handleColorChange("/index/livecategory")}
-                >
-                  Live Category
-                </button>
-              {/* </Link> */}
-            </li>
-          </ul>
-        </div>
+    <div className="p-2 md:p-4 lg:p-6 xl:p-8">
+      <div className="w-full h-8 md:h-10 lg:h-12 xl:h-14 ">
+      <div className="w-40  md:w-72 bg-[#e7e7e7] flex justify-between items-center border border-[#ededed] rounded-full">
+  <ul className="text-sm sm:text-base p-1 xl:p-[5px] w-full flex items-center justify-between space-x-1 sm:space-x-2 xl:space-x-3 rounded-full">
+    <li
+      className={`w-2/5 ${
+        activeLink === "category"
+          ? "bg-cus-black text-white rounded-full h-full"
+          : ""
+      }`}
+    >
+      <Link to="/category">
+        <button
+          className="px-3 sm:px-4 md:px-6 py-2 xl:py-3 flex justify-center items-center w-full"
+        >
+          Category
+        </button>
+      </Link>
+    </li>
+    <li
+      className={`w-3/5 ${
+        activeLink === "livecategory"
+          ? "bg-cus-black text-white rounded-full h-full"
+          : ""
+      }`}
+    >
+      <Link to="/livecategory">
+        <button
+          className="px-3 sm:px-4 md:px-6 py-2 xl:py-3 flex justify-center items-center w-full"
+        >
+          Live Category
+        </button>
+      </Link>
+    </li>
+  </ul>
+</div>
       </div>
 
-      <div>
-        {activeLink === "/index/category" && <Category />}
-        {activeLink === "/index/livecategory" && <LiveCategory />}
-      </div>
+      {activeLink === "category" && <Category />}
+      {activeLink === "livecategory" && <LiveCategory />}
     </div>
   );
 }

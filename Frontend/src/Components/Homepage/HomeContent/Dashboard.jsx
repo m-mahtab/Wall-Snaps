@@ -64,10 +64,10 @@ function Dashboard() {
 
   return (
     <div>
-      <div className="px-8 pt-7 ">
-        <div className="container item">
+      <div className=" p-4  lg:p-6 xl:p-8 ">
+        <div className="flex flex-wrap gap-5 md:gap-6 mb-8 item">
           {cardData.map((item, index) => (
-            <div key={index}>
+            <div key={index} className="w-full sm:w-1/2 md:w-2/5  xl:w-1/4">
               <Card
                 key={index}
                 title={item.title}

@@ -19,7 +19,7 @@ function HeaderComponent({toggleSidebar} ) {
   return (
     <div className='w-full py-[10px] flex items-center justify-between border-b-[#f2f2f2] border-b-2'>
       <div className='px-3 py-3 cursor-pointer'>
-        <FiMenu className='text-xl opacity-70' onClick={toggleSidebar} />
+        <FiMenu className='text-xl opacity-70 ' onClick={toggleSidebar} />
       </div>
       <div className='flex items-center justify-center px-2'>
         <div onClick={toggleLogout} className='h-12 w-12 bg-[#ededed] rounded-full flex items-center justify-center cursor-pointer'>

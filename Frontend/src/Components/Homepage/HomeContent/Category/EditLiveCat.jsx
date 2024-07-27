@@ -4,7 +4,7 @@ import Modal from "react-modal";
 function EditCat({ editItem,  onLiveCategoryEdit, setLiveEditItem, currentLiveImage }) {
   const customStyles = {
     content: {
-      height: "510px", // Customize height
+      height: "auto", // Customize height
       width: "500px", // Customize width
       top: "50%",
       left: "50%",
@@ -12,7 +12,7 @@ function EditCat({ editItem,  onLiveCategoryEdit, setLiveEditItem, currentLiveIm
       bottom: "auto",
       transform: "translate(-50%, -50%)",
       padding: "",
-      borderRadius: "0.5rem", // Rounded corners
+      borderRadius: "1.5rem", // Rounded corners
       overflowY: "auto",
       overflowX: "hidden",
     },
@@ -90,10 +90,12 @@ function EditCat({ editItem,  onLiveCategoryEdit, setLiveEditItem, currentLiveIm
       style={customStyles}
     >
       <div className="h-auto w-full bg-white rounded-3xl">
-        <div className="relative h-10 w-full border-b-2 border-b-[#f2f2f2]">
-          <h2 className="font-bold text-xl cat-bar-add mb-4 px-4">
-            Edit Category
-          </h2>
+      <div className=" w-full border-b-2 border-b-[#f2f2f2]">
+          <div className="relative">
+            <h2 className="font-bold text-xl  cat-bar-add my-5 px-4">
+              Edit Live Category
+            </h2>
+          </div>
         </div>
         <div className="p-5 h-full">
           <form onSubmit={handleFormSubmit} className="">
@@ -105,7 +107,7 @@ function EditCat({ editItem,  onLiveCategoryEdit, setLiveEditItem, currentLiveIm
                 value={formData.title}
                 onChange={handleFormChange}
                 placeholder="Title"
-                className="mt-1 px-2 py-4 border rounded-full w-full"
+                className="mt-1 p-1 md:p-2 xl:px-2 xl:py-4 border rounded-full w-full"
               />
             </div>
 
@@ -115,13 +117,13 @@ function EditCat({ editItem,  onLiveCategoryEdit, setLiveEditItem, currentLiveIm
                   <img
                     src={selectedImage}
                     alt="Selected"
-                    className="w-full h-full rounded-3xl p-0"
+                    className="w-full h-full object-cover rounded-3xl p-0"
                   />
                 ) : (
                   <img
                     src={currentLiveImage}
                     alt="Current"
-                    className="w-full h-full rounded-3xl p-0"
+                    className="w-full h-full object-cover rounded-3xl p-0"
                   />
                 )}
               </div>
@@ -159,6 +161,12 @@ function EditCat({ editItem,  onLiveCategoryEdit, setLiveEditItem, currentLiveIm
             </div>
           </form>
         </div>
+      </div>
+      <div
+        onClick={closeModal}
+        className="text-2xl absolute z-50 top-2 right-2 shadow-xl shadow-slate-200 rounded-xl h-9 w-9 bg-white flex justify-center items-center close-button"
+      >
+        &times;
       </div>
     </Modal>
   );

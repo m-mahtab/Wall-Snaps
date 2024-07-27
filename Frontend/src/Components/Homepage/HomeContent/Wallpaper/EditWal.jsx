@@ -69,7 +69,6 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
   const closeModal = () => {
     setEditItem(null);
     setIsModalOpen(false);
-    
   };
 
   const handleImageChange = (e) => {
@@ -95,10 +94,9 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
       <div className="wallpaper bg-white add-wall">
         <div className=" w-full border-b-2 border-b-[#f2f2f2]">
           <div className="relative">
-          <h2 className="font-bold text-xl  cat-bar-add my-5 px-4">
-            Edit Wallpaper
-          </h2>
-
+            <h2 className="font-bold text-xl  cat-bar-add my-5 px-4">
+              Edit Wallpaper
+            </h2>
           </div>
         </div>
         <div className="p-5">
@@ -109,7 +107,7 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
                 type="text"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                className="mt-1 p-3 border rounded-full w-full"
+                className="mt-1 px-3 py-2 md:px-3  xl:py-4 border rounded-full w-full"
                 required
               />
             </div>
@@ -120,7 +118,7 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1 py-3 px-9 border rounded-full w-full text-[#bfbdbd]"
+                  className="mt-1 p-2 md:p-3 xl:px-6 xl:py-3 border rounded-full w-full  text-[#787878]"
                   required
                 >
                   <option value="">Select</option>
@@ -139,15 +137,13 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
                   <img
                     src={selectedImage}
                     alt="Selected"
-                    className="rounded-3xl p-0 w-full h-full"
-                    
+                    className="rounded-3xl p-0 w-full h-full object-cover"
                   />
                 ) : (
                   <img
                     src={currentImage}
                     alt="Current"
-                    className="rounded-3xl p-0 w-full h-full"
-                    
+                    className="rounded-3xl p-0 w-full h-full object-cover"
                   />
                 )}
               </div>
@@ -185,11 +181,11 @@ function EditWal({ onWallpaperEdit, currentImage, setEditItem, editItem }) {
         </div>
       </div>
       <div
-          onClick={closeModal}
-          className="text-2xl absolute z-50 top-2 right-2 shadow-xl shadow-slate-200 rounded-xl h-9 w-9 bg-white flex justify-center items-center close-button"
-        >
-          &times;
-        </div>
+        onClick={closeModal}
+        className="text-2xl absolute z-50 top-2 right-2 shadow-xl shadow-slate-200 rounded-xl h-9 w-9 bg-white flex justify-center items-center close-button"
+      >
+        &times;
+      </div>
     </Modal>
   );
 }

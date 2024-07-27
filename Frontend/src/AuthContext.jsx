@@ -34,6 +34,7 @@ export const AuthProvider = ({children}) =>{
             const response = await axios.post('http://localhost:5000/logout', {withCredentials : true});
             if(response.status === 200){
                 setIsAuthenticated(false);
+                localStorage.clear();
                 navigate('/')
             }
         }catch(err){

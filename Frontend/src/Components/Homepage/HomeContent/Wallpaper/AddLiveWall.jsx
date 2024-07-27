@@ -80,7 +80,7 @@ function AddLiveWall({ onWallpaperAdded, onRequestClose }) {
                 type="text"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                className="mt-1 p-3 border rounded-full w-full"
+                className="mt-1 px-3 py-2 md:px-3  xl:py-4 border rounded-full w-full"
                 required
               />
             </div>
@@ -91,7 +91,7 @@ function AddLiveWall({ onWallpaperAdded, onRequestClose }) {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1 p-3 border rounded-full w-full text-[#787878]"
+                  className="mt-1 p-2 md:p-3 xl:px-6 xl:py-3 border rounded-full w-full text-[#787878]"
                   required
                 >
                   <option value="">Select Category</option>

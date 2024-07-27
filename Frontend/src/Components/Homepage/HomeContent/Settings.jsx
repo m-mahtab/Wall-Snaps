@@ -1,17 +1,25 @@
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
 import axios from "axios";
 
 function Settings() {
   const [appName, setAppName] = useState("");
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [id, setId] = useState("")
+  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSaveAppName = () => {
     console.log(`App Name: ${appName}`);
     // Implement save functionality here
   };
+  useEffect(() => {
+    // Retrieve username from session
+    const sessionUsername = localStorage.getItem('username'); // or however you're storing session info
+    if (sessionUsername) {
+      console.log(sessionUsername)
+      setUsername(sessionUsername);
+    }
+  }, []);
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -23,7 +31,7 @@ function Settings() {
       const response = await axios.post('http://localhost:5000/reset-password', {
         oldPassword: oldPassword,
         newPassword: newPassword,
-        id : id
+        username : username
       });
       setMessage(response.data.message);
     } catch (error) {
@@ -32,14 +40,14 @@ function Settings() {
   };
 
   return (
-    <div className="w-full">
-      <div className="flex flex-grow p-6 justify-between">
-        <div className="w-1/2 pr-3">
-          <div className="bg-white h-64 rounded-3xl shadow-lg">
-            <div className="relative h-auto w-full border-b-gray-300 border-b-2 mb-4">
-              <p className="font-bold text-xl py-4 px-5 cat-bar">Settings</p>
+    <div className="w-full p-4 sm:p-6 md:p-8">
+      <div className="flex flex-col md:flex-row md:space-x-6">
+        <div className="w-full md:w-1/2 mb-4 md:mb-0">
+          <div className="bg-white h-auto rounded-3xl shadow-lg p-6">
+            <div className="border-b-2 border-gray-300 mb-4 pb-2">
+              <p className="font-bold text-xl">Settings</p>
             </div>
-            <div className="h-auto p-4">
+            <div className="h-auto">
               <label htmlFor="appName" className="block mb-2 font-semibold">
                 App Name Title
               </label>
@@ -61,13 +69,13 @@ function Settings() {
             </div>
           </div>
         </div>
-        <div className="w-1/2 pl-3">
-          <div className="bg-white h-64 rounded-3xl shadow-lg">
-            <div className="h-auto w-full border-b-gray-300 border-b-2 mb-4 relative">
-              <p className="text-lg cat-bar p-4">Change Password</p>
+        <div className="w-full md:w-1/2">
+          <div className="bg-white h-auto rounded-3xl shadow-lg p-6">
+            <div className="border-b-2 border-gray-300 mb-4 pb-2">
+              <p className="text-lg">Change Password</p>
             </div>
-            <div className="h-auto p-4">
-              <div className="flex justify-between px-3">
+            <div className="h-auto">
+              <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-2  lg:space-x-4">
                 <div>
                   <label
                     htmlFor="oldPassword"
